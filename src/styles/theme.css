@@ -32,6 +32,19 @@
   --sidebar-accent-foreground: var(--accent-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+
+  /* Custom variables for teachers page */
+  --bg-primary: var(--card);
+  --bg-secondary: var(--muted);
+  --bg-tertiary: var(--accent);
+  --bg-accent: oklch(0.968 0.007 247.896);
+  --border-primary: oklch(0.8 0.05 20);
+  /* More red-tinted border */
+  --border-secondary: oklch(0.7 0.08 25);
+  /* More intense secondary border */
+  --text-primary: var(--card-foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-muted: var(--muted-foreground);
 }
 
 .dark {
@@ -58,6 +71,19 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+
+  /* Custom variables for teachers page - dark theme */
+  --bg-primary: var(--card);
+  --bg-secondary: var(--muted);
+  --bg-tertiary: var(--accent);
+  --bg-accent: oklch(0.279 0.041 260.031 / 0.3);
+  --border-primary: oklch(0.3 0.08 15);
+  /* More red-tinted dark border */
+  --border-secondary: oklch(0.4 0.1 20);
+  /* More intense dark secondary border */
+  --text-primary: var(--card-foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-muted: var(--muted-foreground);
 }
 
 @theme inline {

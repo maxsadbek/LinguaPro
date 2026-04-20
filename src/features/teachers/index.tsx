@@ -1,10 +1,19 @@
-import { useState } from 'react'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
+import { useState } from 'react';
+import { ConfigDrawer } from '@/components/config-drawer';
+import { Header } from '@/components/layout/header';
+import { Main } from '@/components/layout/main';
+import { ProfileDropdown } from '@/components/profile-dropdown';
+import { Search } from '@/components/search';
+import { ThemeSwitch } from '@/components/theme-switch';
+
+
+
+
+
+
+
+
+
 
 interface Teacher {
   id: number
@@ -48,11 +57,11 @@ const mockTeachers: Teacher[] = [
     initials: 'SA',
     subject: 'Grammar Specialist',
     badgeColor: {
-      bg: '#eef3ff',
-      text: '#1e3a99',
-      border: '#3a5bd9',
-      avatarBg: '#eef3ff',
-      avatarFill: '#a0b8f0',
+      bg: '#fff0f1',
+      text: '#a01020',
+      border: '#e8273a',
+      avatarBg: '#fff0f1',
+      avatarFill: '#f5b8c0',
     },
     phone: '+998 89 345-22-11',
     groups: 5,
@@ -65,11 +74,11 @@ const mockTeachers: Teacher[] = [
     initials: 'MR',
     subject: 'English for Kids',
     badgeColor: {
-      bg: '#edfaf3',
-      text: '#0a6b3f',
-      border: '#1aaa6c',
-      avatarBg: '#edfaf3',
-      avatarFill: '#80d4ae',
+      bg: '#fff0f1',
+      text: '#a01020',
+      border: '#e8273a',
+      avatarBg: '#fff0f1',
+      avatarFill: '#f5b8c0',
     },
     phone: '+998 97 777-00-11',
     groups: 12,
@@ -82,11 +91,11 @@ const mockTeachers: Teacher[] = [
     initials: 'JT',
     subject: 'Business English',
     badgeColor: {
-      bg: '#fff5eb',
-      text: '#92500a',
-      border: '#d97706',
-      avatarBg: '#fff5eb',
-      avatarFill: '#f0c070',
+      bg: '#fff0f1',
+      text: '#a01020',
+      border: '#e8273a',
+      avatarBg: '#fff0f1',
+      avatarFill: '#f5b8c0',
     },
     phone: '+998 93 445-56-67',
     groups: 4,
@@ -99,11 +108,11 @@ const mockTeachers: Teacher[] = [
     initials: 'EP',
     subject: 'Russian Expert',
     badgeColor: {
-      bg: '#f3eeff',
-      text: '#4e1a99',
-      border: '#7c3aed',
-      avatarBg: '#f3eeff',
-      avatarFill: '#c0a8f0',
+      bg: '#fff0f1',
+      text: '#a01020',
+      border: '#e8273a',
+      avatarBg: '#fff0f1',
+      avatarFill: '#f5b8c0',
     },
     phone: '+998 80 900-11-22',
     groups: 6,
@@ -119,20 +128,6 @@ const kpiData = {
   activeGroupsMax: 100,
   description:
     "O'tgan oy davomida ustozlarning o'rtacha reytingi 12% ga oshdi. IELTS natijalari bo'yicha eng yuqori ko'rsatkich — 8.5 ball.",
-}
-
-function StarIcon({
-  size = 10,
-  fill = '#e8c84a',
-}: {
-  size?: number
-  fill?: string
-}) {
-  return (
-    <svg width={size} height={size} viewBox='0 0 24 24' fill={fill}>
-      <path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' />
-    </svg>
-  )
 }
 
 function PhoneIcon() {
@@ -241,14 +236,18 @@ function ActionButton({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 5,
-        border: hovered ? `0.5px solid ${c.border}` : '0.5px solid #d1d5db',
-        background: hovered ? '#f9fafb' : '#fff',
+        border: hovered
+          ? `0.5px solid ${c.border}`
+          : '0.5px solid var(--border-secondary, #d1d5db)',
+        background: hovered
+          ? 'var(--bg-secondary, #f9fafb)'
+          : 'var(--bg-primary, #fff)',
         borderRadius: 8,
         padding: '6px 0',
         fontSize: 11,
         fontWeight: 500,
         cursor: 'pointer',
-        color: hovered ? c.color : '#6b7280',
+        color: hovered ? c.color : 'var(--text-secondary, #6b7280)',
         transition: 'all 0.13s',
         fontFamily: 'inherit',
       }}
@@ -270,14 +269,13 @@ function TeacherCard({
   onDelete: (teacher: Teacher) => void
   onDetail: (teacher: Teacher) => void
 }) {
-  const { name, subject, badgeColor, phone, groups, experience, rating } =
-    teacher
+  const { name, subject, badgeColor, phone, groups, experience } = teacher
 
   return (
     <div
       style={{
-        background: '#fff',
-        border: '0.5px solid #e5e7eb',
+        background: 'var(--bg-primary, #fff)',
+        border: '1px solid var(--border-primary, #e5e7eb)',
         borderRadius: 14,
         padding: '1rem',
         display: 'flex',
@@ -287,29 +285,6 @@ function TeacherCard({
         transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
     >
-      {/* Rating badge */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 10,
-          right: 10,
-          fontSize: 11,
-          fontWeight: 500,
-          color: '#b07a00',
-          background: '#fdf3d7',
-          border: '0.5px solid #e8c84a',
-          borderRadius: 20,
-          padding: '2px 8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 3,
-        }}
-      >
-        <StarIcon />
-        {rating}
-      </div>
-
-      {/* Avatar + Name */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div
           style={{
@@ -331,7 +306,7 @@ function TeacherCard({
             style={{
               fontSize: 14,
               fontWeight: 600,
-              color: '#1a1d2e',
+              color: 'var(--text-primary, #1a1d2e)',
               lineHeight: 1.3,
             }}
           >
@@ -360,7 +335,7 @@ function TeacherCard({
       <div
         style={{
           fontSize: 12,
-          color: '#6b7280',
+          color: 'var(--text-secondary, #6b7280)',
           display: 'flex',
           alignItems: 'center',
           gap: 6,
@@ -371,7 +346,9 @@ function TeacherCard({
       </div>
 
       {/* Divider */}
-      <div style={{ borderTop: '0.5px solid #e5e7eb' }} />
+      <div
+        style={{ borderTop: '0.5px solid var(--border-primary, #e5e7eb)' }}
+      />
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
@@ -381,22 +358,34 @@ function TeacherCard({
             flexDirection: 'column',
             gap: 2,
             paddingRight: 10,
-            borderRight: '0.5px solid #e5e7eb',
+            borderRight: '0.5px solid var(--border-primary, #e5e7eb)',
           }}
         >
           <span
             style={{
               fontSize: 10,
-              color: '#9ca3af',
+              color: 'var(--text-muted, #9ca3af)',
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
             }}
           >
             Guruhlar
           </span>
-          <span style={{ fontSize: 17, fontWeight: 700, color: '#1a1d2e' }}>
+          <span
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              color: 'var(--text-primary, #1a1d2e)',
+            }}
+          >
             {groups}{' '}
-            <span style={{ fontSize: 11, fontWeight: 400, color: '#9ca3af' }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 400,
+                color: 'var(--text-muted, #9ca3af)',
+              }}
+            >
               ta
             </span>
           </span>
@@ -412,16 +401,28 @@ function TeacherCard({
           <span
             style={{
               fontSize: 10,
-              color: '#9ca3af',
+              color: 'var(--text-muted, #9ca3af)',
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
             }}
           >
             Tajriba
           </span>
-          <span style={{ fontSize: 17, fontWeight: 700, color: '#1a1d2e' }}>
+          <span
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              color: 'var(--text-primary, #1a1d2e)',
+            }}
+          >
             {experience}{' '}
-            <span style={{ fontSize: 11, fontWeight: 400, color: '#9ca3af' }}>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 400,
+                color: 'var(--text-muted, #9ca3af)',
+              }}
+            >
               yil
             </span>
           </span>
@@ -429,7 +430,9 @@ function TeacherCard({
       </div>
 
       {/* Divider */}
-      <div style={{ borderTop: '0.5px solid #e5e7eb' }} />
+      <div
+        style={{ borderTop: '0.5px solid var(--border-primary, #e5e7eb)' }}
+      />
 
       {/* Action buttons */}
       <div style={{ display: 'flex', gap: 6 }}>
@@ -462,8 +465,10 @@ function AddCard({ onAdd }: { onAdd: () => void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: hovered ? '#fff5f5' : '#fff',
-        border: `1.5px dashed ${hovered ? '#e8273a' : '#d1d5db'}`,
+        background: hovered
+          ? 'var(--bg-accent, #fff5f5)'
+          : 'var(--bg-primary, #fff)',
+        border: `1.5px dashed ${hovered ? '#e8273a' : 'var(--border-secondary, #d1d5db)'}`,
         borderRadius: 14,
         display: 'flex',
         flexDirection: 'column',
@@ -480,7 +485,7 @@ function AddCard({ onAdd }: { onAdd: () => void }) {
           width: 40,
           height: 40,
           borderRadius: '50%',
-          background: '#f3f4f6',
+          background: 'var(--bg-tertiary, #f3f4f6)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -491,7 +496,7 @@ function AddCard({ onAdd }: { onAdd: () => void }) {
           height={20}
           viewBox='0 0 24 24'
           fill='none'
-          stroke='#9ca3af'
+          stroke='var(--text-muted, #9ca3af)'
           strokeWidth={2}
         >
           <circle cx='12' cy='12' r='10' />
@@ -499,13 +504,19 @@ function AddCard({ onAdd }: { onAdd: () => void }) {
           <line x1='8' y1='12' x2='16' y2='12' />
         </svg>
       </div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1d2e' }}>
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'var(--text-primary, #1a1d2e)',
+        }}
+      >
         Yangi ustoz qo'shish
       </div>
       <div
         style={{
           fontSize: 11,
-          color: '#9ca3af',
+          color: 'var(--text-muted, #9ca3af)',
           textAlign: 'center',
           maxWidth: 120,
           lineHeight: 1.5,
@@ -543,7 +554,7 @@ export default function TeachersPage() {
           style={{
             padding: '18px 28px 0',
             fontSize: 11,
-            color: '#9ca3af',
+            color: 'var(--text-muted, #9ca3af)',
             letterSpacing: '0.06em',
             textTransform: 'uppercase',
           }}
@@ -554,10 +565,22 @@ export default function TeachersPage() {
 
         {/* Header */}
         <div style={{ padding: '10px 28px 20px' }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1a1d2e' }}>
+          <h1
+            style={{
+              fontSize: 24,
+              fontWeight: 700,
+              color: 'var(--text-primary, #1a1d2e)',
+            }}
+          >
             Ustozlar Jamoasi
           </h1>
-          <p style={{ fontSize: 13, color: '#6b7280', marginTop: 3 }}>
+          <p
+            style={{
+              fontSize: 13,
+              color: 'var(--text-secondary, #6b7280)',
+              marginTop: 3,
+            }}
+          >
             LinguaPro o'quv markazining malakali o'qituvchilari boshqaruvi
           </p>
         </div>
