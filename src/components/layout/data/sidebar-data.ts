@@ -5,8 +5,6 @@ import {
   LayoutDashboard,
   ListTodo,
   MessagesSquare,
-  Monitor,
-  Palette,
   UserCog,
   Users,
   Wrench,
@@ -84,19 +82,9 @@ export const sidebarData: SidebarData = {
           icon: Wrench,
         },
         {
-          title: 'Tashqi',
-          url: '/settings/appearance',
-          icon: Palette,
-        },
-        {
           title: 'Bildirishlar',
           url: '/settings/notifications',
           icon: Bell,
-        },
-        {
-          title: "Ko'rsatish",
-          url: '/settings/display',
-          icon: Monitor,
         },
       ],
     },
