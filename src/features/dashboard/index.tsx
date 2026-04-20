@@ -1,14 +1,40 @@
-import { ClipboardCheck, DollarSign, Network, Users } from 'lucide-react'
-import { Tabs, TabsContent } from '@/components/ui/tabs'
-import { ConfigDrawer } from '@/components/config-drawer'
-import { DashboardCard } from '@/components/dashboard-card'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { GroupCapacity } from './components/group-capacity'
-import { StudentGrowth } from './components/student-growth'
+import { ClipboardCheck, DollarSign, Network, Users } from 'lucide-react';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { ConfigDrawer } from '@/components/config-drawer';
+import { DashboardCard } from '@/components/dashboard-card';
+import { Header } from '@/components/layout/header';
+import { Main } from '@/components/layout/main';
+import { ProfileDropdown } from '@/components/profile-dropdown';
+import { Search } from '@/components/search';
+import { ThemeSwitch } from '@/components/theme-switch';
+import { GroupCapacity } from './components/group-capacity';
+import { StudentGrowth } from './components/student-growth';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default function Dashboard() {
   return (
@@ -25,10 +51,10 @@ export default function Dashboard() {
       <Main>
         <div className='mb-8'>
           <h1 className='text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white'>
-            Xush kelibsiz, Admin!
+            Welcome, Admin!
           </h1>
           <p className='mt-1 text-sm font-medium text-[#E11D48]'>
-            Bugungi o'quv markazi holati va asosiy ko'rsatkichlar.
+            Current status and key indicators of the training center.
           </p>
         </div>
 
@@ -55,7 +81,7 @@ export default function Dashboard() {
                 title='MONTHLY REVENUE'
                 value='48.5M UZS'
                 status='+4.2M'
-                statusVariant='success'x
+                statusVariant='success'
                 icon={DollarSign}
               />
 

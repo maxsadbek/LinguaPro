@@ -1,3 +1,3 @@
 export function CustomLogo() {
-  return <img src='/src/assets/favicon.png' alt='Linguard Admin Logo' />
+  return <img src='/src/assets/favicon.png' alt='Lingua Admin Logo' />
 }
