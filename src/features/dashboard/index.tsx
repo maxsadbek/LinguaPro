@@ -55,7 +55,7 @@ export default function Dashboard() {
                 title='MONTHLY REVENUE'
                 value='48.5M UZS'
                 status='+4.2M'
-                statusVariant='success'
+                statusVariant='success'x
                 icon={DollarSign}
               />
 

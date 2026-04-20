@@ -53,7 +53,7 @@ export const sidebarData: SidebarData = {
           icon: ListTodo,
         },
         {
-          title: "O'qituvchilar",
+          title: "Ustozlar",
           url: '/teachers',
           icon: GraduationCap,
         },
