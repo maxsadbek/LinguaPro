@@ -7,7 +7,7 @@ import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
 import { IconFacebook, IconGithub } from '@/assets/brand-icons'
 import { useAuthStore } from '@/stores/auth-store'
-import { sleep, cn } from '@/lib/utils'
+import { cn, sleep } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -18,6 +18,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { PasswordInput } from '@/components/password-input'
 
 const formSchema = z.object({
@@ -28,6 +35,7 @@ const formSchema = z.object({
     .string()
     .min(1, 'Please enter your password.')
     .min(7, 'Password must be at least 7 characters long.'),
+  role: z.enum(['admin', 'teacher', 'user']),
 })
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
@@ -48,6 +56,7 @@ export function UserAuthForm({
     defaultValues: {
       email: '',
       password: '',
+      role: 'user',
     },
   })
 
@@ -59,11 +68,24 @@ export function UserAuthForm({
       success: () => {
         setIsLoading(false)
 
+        // Mock credentials for different roles
+        const mockCredentials = {
+          admin: { email: 'admin@linguardpro.com', accountNo: 'ADM001' },
+          teacher: { email: 'teacher@linguardpro.com', accountNo: 'TCH001' },
+          user: { email: 'user@linguardpro.com', accountNo: 'USR001' },
+        }
+
+        // Check if provided email matches role credentials
+        const roleCredentials = mockCredentials[data.role]
+        if (data.email !== roleCredentials.email) {
+          throw new Error(`Invalid credentials for ${data.role} role`)
+        }
+
         // Mock successful authentication with expiry computed at success time
         const mockUser = {
-          accountNo: 'ACC001',
+          accountNo: roleCredentials.accountNo,
           email: data.email,
-          role: ['user'],
+          role: data.role,
           exp: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
         }
 
@@ -71,13 +93,21 @@ export function UserAuthForm({
         auth.setUser(mockUser)
         auth.setAccessToken('mock-access-token')
 
-        // Redirect to the stored location or default to dashboard
-        const targetPath = redirectTo || '/'
+        // Redirect to role-specific dashboard
+        const rolePaths = {
+          admin: '/admin',
+          teacher: '/teachers',
+          user: '/students',
+        }
+        const targetPath = redirectTo || rolePaths[data.role]
         navigate({ to: targetPath, replace: true })
 
         return `Welcome back, ${data.email}!`
       },
-      error: 'Error',
+      error: (error) => {
+        setIsLoading(false)
+        return error.message || 'Login failed. Please check your credentials.'
+      },
     })
   }
 
@@ -117,6 +147,28 @@ export function UserAuthForm({
               >
                 Forgot password?
               </Link>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name='role'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select your role' />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value='admin'>Admin</SelectItem>
+                  <SelectItem value='teacher'>Teacher</SelectItem>
+                  <SelectItem value='user'>User</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
             </FormItem>
           )}
         />

@@ -1,12 +1,12 @@
 import { create } from 'zustand'
-import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
+import { getCookie, removeCookie, setCookie } from '@/lib/cookies'
 
 const ACCESS_TOKEN = 'thisisjustarandomstring'
 
 interface AuthUser {
   accountNo: string
   email: string
-  role: string[]
+  role: 'admin' | 'teacher' | 'user'
   exp: number
 }
 
