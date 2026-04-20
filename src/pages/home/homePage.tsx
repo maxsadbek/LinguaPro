@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { useState } from "react";
+=======
+>>>>>>> e4e6188fc2b57c18cc21d47d5bb6f4a900ccc006
 
 /* ─── SHARED DESIGN TOKENS ─── */
 // Font: Poppins (display) + Inter (body) — loaded via @import in style tag below
