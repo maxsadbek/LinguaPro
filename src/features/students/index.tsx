@@ -193,6 +193,27 @@ export default function StudentsPage() {
     }
   }
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  let value = e.target.value
+
+  // +998 ni o'chirmaslik
+  if (!value.startsWith('+998')) {
+    value = '+998'
+  }
+
+  // Faqat raqamlarga ruxsat (+998 dan keyin)
+  const digits = value.slice(4).replace(/\D/g, '')
+
+  // Format: +998 XX XXX XX XX
+  let formatted = '+998'
+  if (digits.length > 0) formatted += ' ' + digits.slice(0, 2)
+  if (digits.length > 2) formatted += ' ' + digits.slice(2, 5)
+  if (digits.length > 5) formatted += ' ' + digits.slice(5, 7)
+  if (digits.length > 7) formatted += ' ' + digits.slice(7, 9)
+
+  setFormData((prev) => ({ ...prev, phone: formatted }))
+}
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -472,11 +493,9 @@ export default function StudentsPage() {
                       </Label>
                       <Input
                         id='phone'
-                        value={formData.phone}
-                        onChange={(e) =>
-                          handleInputChange('phone', e.target.value)
-                        }
-                        placeholder='+998 90 123 45 67'
+                        value={formData.phone || '+998'}
+                        onChange={handlePhoneChange}
+                        placeholder='+998 XX XXX XX XX'
                         className='h-10'
                         required
                       />
