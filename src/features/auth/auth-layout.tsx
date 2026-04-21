@@ -4,13 +4,15 @@ type AuthLayoutProps = {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className='container grid h-svh max-w-none items-center justify-center'>
-      <div className='mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:p-8'>
-        <div className='mb-4 flex items-center justify-center'>
-          
-          <h1 className='text-xl font-semibold text-black'>LinguaPro</h1>
+    <div className='flex min-h-svh items-center justify-center bg-muted/40 '>
+      <div className='w-full max-w-md space-y-6'>
+        <div className='flex items-center justify-center'>
+          <h1 className='text-3xl font-bold text-[#C70C3D]'>
+            LinguaPro
+          </h1>
         </div>
         {children}
+        
       </div>
     </div>
   )
