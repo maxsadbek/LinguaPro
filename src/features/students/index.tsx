@@ -306,7 +306,7 @@ export default function StudentsPage() {
         prevStudents.filter((s) => s.id !== updatedStudent.id)
       )
       addToast(
-        `"${updatedStudent.fullName}" o'quvchisi muvaffaqiyatli o'chirildi`,
+        `${updatedStudent.fullName} student was successfully deleted`,
         'success'
       )
     } else if (modalAction === 'edit') {
@@ -317,7 +317,7 @@ export default function StudentsPage() {
         )
       )
       addToast(
-        `"${updatedStudent.fullName}" o'quvchisi muvaffaqiyatli yangilandi`,
+        `${updatedStudent.fullName} student was successfully updated`,
         'success'
       )
     }
@@ -339,10 +339,10 @@ export default function StudentsPage() {
             <div className='flex items-center justify-between'>
               <div>
                 <h1 className='text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white'>
-                  O'quvchilar Ro'yxati
+                  Students List
                 </h1>
                 <p className='mt-1 text-sm font-medium text-gray-600 dark:text-gray-400'>
-                  Barcha o'quvchilar ma'lumotlari va to'lov holati
+                  All students information and payment status
                 </p>
               </div>
               <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -363,13 +363,13 @@ export default function StudentsPage() {
                     }}
                   >
                     <Plus className='mr-2 h-4 w-4' />
-                    O'quvchi qo'shish
+                    Add Student
                   </Button>
                 </DialogTrigger>
                 <DialogContent className='sm:max-w-125'>
                   <DialogHeader>
                     <DialogTitle className='text-xl font-semibold'>
-                      O'quvchi qo'shish
+                      Add Student
                     </DialogTitle>
                   </DialogHeader>
                   <form
@@ -406,14 +406,14 @@ export default function StudentsPage() {
                           <Plus className='h-3 w-3 text-white' />
                         </div>
                       </div>
-                      <p className='text-sm text-gray-500'>Rasm yuklash</p>
+                      <p className='text-sm text-gray-500'>Upload image</p>
                     </div>
 
                     {/* Form Fields */}
                     <div className='mb-4 grid w-full grid-cols-2 gap-4'>
                       <div className='space-y-2'>
                         <Label htmlFor='name' className='text-sm font-medium'>
-                          Ism
+                          First Name
                         </Label>
                         <Input
                           id='name'
@@ -421,7 +421,7 @@ export default function StudentsPage() {
                           onChange={(e) =>
                             handleInputChange('name', e.target.value)
                           }
-                          placeholder='Ismni kiriting'
+                          placeholder='Enter first name'
                           className='h-10'
                           required
                         />
@@ -431,7 +431,7 @@ export default function StudentsPage() {
                           htmlFor='surname'
                           className='text-sm font-medium'
                         >
-                          Familiya
+                          Last Name
                         </Label>
                         <Input
                           id='surname'
@@ -439,7 +439,7 @@ export default function StudentsPage() {
                           onChange={(e) =>
                             handleInputChange('surname', e.target.value)
                           }
-                          placeholder='Familiyani kiriting'
+                          placeholder='Enter last name'
                           className='h-10'
                           required
                         />
@@ -448,7 +448,7 @@ export default function StudentsPage() {
 
                     <div className='mb-4 w-full space-y-2'>
                       <Label htmlFor='phone' className='text-sm font-medium'>
-                        Telefon raqami
+                        Phone Number
                       </Label>
                       <Input
                         id='phone'
@@ -462,7 +462,7 @@ export default function StudentsPage() {
 
                     <div className='mb-4 w-full space-y-2'>
                       <Label htmlFor='level' className='text-sm font-medium'>
-                        Daraja
+                        Level
                       </Label>
                       <Select
                         value={formData.level}
@@ -471,7 +471,7 @@ export default function StudentsPage() {
                         }
                       >
                         <SelectTrigger className='h-10'>
-                          <SelectValue placeholder='Darajani tanlang' />
+                          <SelectValue placeholder='Select level' />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value='beginner'>Beginner</SelectItem>
@@ -486,7 +486,7 @@ export default function StudentsPage() {
                     <div className='mb-6 grid w-full grid-cols-2 gap-4'>
                       <div className='space-y-2'>
                         <Label htmlFor='status' className='text-sm font-medium'>
-                          Holati
+                          Status
                         </Label>
                         <div className='flex h-10 items-center space-x-2'>
                           <Switch
@@ -500,7 +500,7 @@ export default function StudentsPage() {
                             htmlFor='status'
                             className='text-sm text-gray-600'
                           >
-                            Faol
+                            Active
                           </Label>
                         </div>
                       </div>
@@ -509,7 +509,7 @@ export default function StudentsPage() {
                           htmlFor='payment-status'
                           className='text-sm font-medium'
                         >
-                          To'lov holati
+                          Payment Status
                         </Label>
                         <Select
                           value={formData.paymentStatus}
@@ -518,12 +518,12 @@ export default function StudentsPage() {
                           }
                         >
                           <SelectTrigger className='h-10'>
-                            <SelectValue placeholder="To'lov holatini tanlang" />
+                            <SelectValue placeholder='Select payment status' />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value='paid'>To'langan</SelectItem>
-                            <SelectItem value='pending'>Kutilmoqda</SelectItem>
-                            <SelectItem value='overdue'>Qarzdor</SelectItem>
+                            <SelectItem value='paid'>Paid</SelectItem>
+                            <SelectItem value='pending'>Pending</SelectItem>
+                            <SelectItem value='overdue'>Overdue</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -601,7 +601,7 @@ export default function StudentsPage() {
                 <div className='text-2xl font-bold text-gray-900 dark:text-white'>
                   8
                 </div>
-                <p className='text-xs text-gray-500'>Qarzdor o'quvchilar</p>
+                <p className='text-xs text-gray-500'>Debtors</p>
               </CardContent>
             </Card>
 
@@ -626,9 +626,9 @@ export default function StudentsPage() {
           {/* Students Table */}
           <Card>
             <CardHeader>
-              <CardTitle>O'quvchilar jadvali</CardTitle>
+              <CardTitle>Students Table</CardTitle>
               <CardDescription>
-                Jami {studentsData.length} ta o'quvchi
+                Total {studentsData.length} students
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -636,12 +636,12 @@ export default function StudentsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className='w-12'></TableHead>
-                    <TableHead>F.I.SH.</TableHead>
-                    <TableHead>Telefon</TableHead>
-                    <TableHead>Guruh</TableHead>
-                    <TableHead>To'lov holati</TableHead>
+                    <TableHead>Full Name</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>Group</TableHead>
+                    <TableHead>Payment Status</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className='text-right'>Amallar</TableHead>
+                    <TableHead className='text-right'>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -687,7 +687,7 @@ export default function StudentsPage() {
                             ]
                           }
                         >
-                          {student.status === 'active' ? 'Faol' : 'Faol emas'}
+                          {student.status === 'active' ? 'Faol' : 'Inactive'}
                         </Badge>
                       </TableCell>
                       <TableCell className='text-right'>
@@ -697,7 +697,7 @@ export default function StudentsPage() {
                             size='sm'
                             onClick={() => handleViewStudent(student)}
                             className='hover:bg-blue-50 hover:text-blue-600'
-                            title='Ko&#39;rish'
+                            title='View'
                           >
                             <Eye className='h-4 w-4' />
                           </Button>
@@ -706,7 +706,7 @@ export default function StudentsPage() {
                             size='sm'
                             onClick={() => handleEditStudent(student)}
                             className='hover:bg-green-50 hover:text-green-600'
-                            title='Tahrirlash'
+                            title='Edit'
                           >
                             <Edit className='h-4 w-4' />
                           </Button>
@@ -715,7 +715,7 @@ export default function StudentsPage() {
                             size='sm'
                             onClick={() => handleDeleteStudent(student)}
                             className='text-red-600 hover:bg-red-50 hover:text-red-700'
-                            title='O&#39;chirish'
+                            title='Delete'
                           >
                             <Trash2 className='h-4 w-4' />
                           </Button>

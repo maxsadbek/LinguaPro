@@ -68,11 +68,11 @@ export const StudentModal = ({
                   marginBottom: 8,
                 }}
               >
-                O'quvchini o'chirish
+                Delete Student
               </h2>
               <p style={{ color: '#64748b', fontSize: 14 }}>
-                "{student.fullName}" o'quvchisini ro'yxatdan o'chirishga
-                ishonchingiz komilmi?
+                Are you sure you want to delete "{student.fullName}" from the
+                list?
               </p>
             </div>
             <div
@@ -85,8 +85,7 @@ export const StudentModal = ({
               }}
             >
               <p style={{ color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
-                Bu amal ortga qaytarib bo'lmaydi. Barcha ma'lumotlar
-                o'chiriladi.
+                This action cannot be undone. All data will be deleted.
               </p>
             </div>
           </>
@@ -102,7 +101,7 @@ export const StudentModal = ({
                 marginBottom: 16,
               }}
             >
-              O'quvchini tahrirlash
+              Edit Student
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
@@ -115,7 +114,7 @@ export const StudentModal = ({
                     marginBottom: 4,
                   }}
                 >
-                  F.I.SH.
+                  Full Name
                 </label>
                 <input
                   type='text'
@@ -142,7 +141,7 @@ export const StudentModal = ({
                     marginBottom: 4,
                   }}
                 >
-                  Telefon
+                  Phone
                 </label>
                 <input
                   type='text'
@@ -167,7 +166,7 @@ export const StudentModal = ({
                     marginBottom: 4,
                   }}
                 >
-                  Guruh
+                  Group
                 </label>
                 <select
                   value={formData.group}
@@ -199,7 +198,7 @@ export const StudentModal = ({
                 marginBottom: 16,
               }}
             >
-              O'quvchi ma'lumotlari
+              Student Information
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -257,7 +256,7 @@ export const StudentModal = ({
                         fontWeight: 500,
                       }}
                     >
-                      TELEFON
+                      PHONE
                     </div>
                     <div
                       style={{
@@ -277,7 +276,7 @@ export const StudentModal = ({
                         fontWeight: 500,
                       }}
                     >
-                      TO'LOV HOLATI
+                      PAYMENT STATUS
                     </div>
                     <div
                       style={{
@@ -286,9 +285,9 @@ export const StudentModal = ({
                         fontWeight: 500,
                       }}
                     >
-                      {student.paymentStatus === 'paid' && "To'langan"}
-                      {student.paymentStatus === 'pending' && 'Kutilmoqda'}
-                      {student.paymentStatus === 'overdue' && 'Qarzdor'}
+                      {student.paymentStatus === 'paid' && 'Paid'}
+                      {student.paymentStatus === 'pending' && 'Pending'}
+                      {student.paymentStatus === 'overdue' && 'Overdue'}
                     </div>
                   </div>
                 </div>
@@ -317,7 +316,7 @@ export const StudentModal = ({
                         fontWeight: 500,
                       }}
                     >
-                      {student.status === 'active' ? 'Faol' : 'Faol emas'}
+                      {student.status === 'active' ? 'Active' : 'Inactive'}
                     </div>
                   </div>
                   <div>
@@ -328,7 +327,7 @@ export const StudentModal = ({
                         fontWeight: 500,
                       }}
                     >
-                      GURUH
+                      GROUP
                     </div>
                     <div
                       style={{
@@ -396,7 +395,7 @@ export const StudentModal = ({
               cursor: 'pointer',
             }}
           >
-            {action === 'detail' ? 'Yopish' : 'Bekor qilish'}
+            {action === 'detail' ? 'Close' : 'Cancel'}
           </button>
           {action !== 'detail' && (
             <button
@@ -415,7 +414,7 @@ export const StudentModal = ({
                 cursor: 'pointer',
               }}
             >
-              {action === 'delete' ? "O'chirish" : 'Saqlash'}
+              {action === 'delete' ? 'Delete' : 'Save'}
             </button>
           )}
         </div>

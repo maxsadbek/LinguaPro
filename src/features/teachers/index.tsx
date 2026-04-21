@@ -122,7 +122,7 @@ const kpiData = {
   totalTeachersMax: 40,
   activeGroupsMax: 100,
   description:
-    "O'tgan oy davomida ustozlarning o'rtacha reytingi 12% ga oshdi. IELTS natijalari bo'yicha eng yuqori ko'rsatkich — 8.5 ball.",
+    "Last month, teachers' average rating increased by 12%. Highest IELTS score achieved - 8.5 points.",
 }
 
 // --- Icons ---
@@ -250,6 +250,10 @@ function TeacherCard({
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+      }}
       style={{
         background: 'var(--bg-primary, #fff)',
         border: `1px solid ${hovered ? '#e5e7eb' : 'var(--border-primary, #f1f5f9)'}`,
@@ -275,9 +279,22 @@ function TeacherCard({
             alignItems: 'center',
             justifyContent: 'center',
             border: `1px solid ${teacher.badgeColor.border}40`,
+            overflow: 'hidden',
           }}
         >
-          <AvatarSilhouette fill={teacher.badgeColor.avatarFill} />
+          {teacher.avatar ? (
+            <img
+              src={teacher.avatar}
+              alt={teacher.name}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          ) : (
+            <AvatarSilhouette fill={teacher.badgeColor.avatarFill} />
+          )}
         </div>
         <div style={{ overflow: 'hidden' }}>
           <div
@@ -365,75 +382,12 @@ function TeacherCard({
   )
 }
 
-function AddCard({ onAdd }: { onAdd: () => void }) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <div
-      onClick={onAdd}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        border: `2px dashed ${hovered ? '#e11d48' : 'var(--border-secondary, #e2e8f0)'}`,
-        borderRadius: 20,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 12,
-        minHeight: 240,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-        background: hovered ? 'var(--bg-accent, #fff1f2)' : 'transparent',
-      }}
-    >
-      <div
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: '50%',
-          background: hovered
-            ? 'var(--bg-accent, #ffe4e6)'
-            : 'var(--bg-tertiary, #f8fafc)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: hovered ? '#e11d48' : '#94a3b8',
-          transition: 'all 0.2s',
-        }}
-      >
-        <svg
-          width={24}
-          height={24}
-          viewBox='0 0 24 24'
-          fill='none'
-          stroke='currentColor'
-          strokeWidth={2.5}
-        >
-          <line x1='12' y1='5' x2='12' y2='19' />
-          <line x1='5' y1='12' x2='19' y2='12' />
-        </svg>
-      </div>
-      <div style={{ textAlign: 'center' }}>
-        <div
-          style={{
-            fontWeight: 600,
-            color: hovered ? '#e11d48' : '#475569',
-            fontSize: 14,
-          }}
-        >
-          Yangi ustoz
-        </div>
-        <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
-          Ro'yxatga qo'shish
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // --- Main Page ---
 export default function TeachersPage() {
-  const [teachers, setTeachers] = useState(mockTeachers)
+  const [teachers, setTeachers] = useState<Teacher[]>(() => {
+    const savedTeachers = localStorage.getItem('teachers')
+    return savedTeachers ? JSON.parse(savedTeachers) : mockTeachers
+  })
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null)
   const [modalAction, setModalAction] = useState<'edit' | 'delete' | 'detail'>(
@@ -460,40 +414,62 @@ export default function TeachersPage() {
   }
 
   const handleAdd = () => {
-    addToast("Yangi ustoz qo'shish funksiyasi tez orada qo'shiladi", 'info')
+    setSelectedTeacher(null)
+    setModalAction('edit')
+    setModalOpen(true)
   }
 
   const handleModalClose = () => {
     setModalOpen(false)
     setSelectedTeacher(null)
+    setModalAction('detail')
   }
 
   const handleModalConfirm = (updatedTeacher: Teacher) => {
+    let newTeachers: Teacher[]
+
     if (modalAction === 'delete') {
       // Delete functionality
-      setTeachers((prevTeachers) =>
-        prevTeachers.filter((t) => t.id !== updatedTeacher.id)
-      )
+      newTeachers = teachers.filter((t) => t.id !== updatedTeacher.id)
+      setTeachers(newTeachers)
       addToast(
-        `"${updatedTeacher.name}" ustoz muvaffaqiyatli o'chirildi`,
+        `"${updatedTeacher.name}" teacher was successfully deleted`,
         'success'
       )
       // TODO: Backend API call to delete teacher
       // await api.deleteTeacher(updatedTeacher.id)
     } else if (modalAction === 'edit') {
-      // Edit functionality
-      setTeachers((prevTeachers) =>
-        prevTeachers.map((t) =>
+      if (selectedTeacher) {
+        // Edit existing teacher
+        newTeachers = teachers.map((t) =>
           t.id === updatedTeacher.id ? updatedTeacher : t
         )
-      )
-      addToast(
-        `"${updatedTeacher.name}" ustoz ma'lumotlari muvaffaqiyatli yangilandi`,
-        'success'
-      )
-      // TODO: Backend API call to update teacher
-      // await api.updateTeacher(updatedTeacher.id, updatedTeacher)
+        setTeachers(newTeachers)
+        addToast(
+          `"${updatedTeacher.name}" teacher information was successfully updated`,
+          'success'
+        )
+        // TODO: Backend API call to update teacher
+        // await api.updateTeacher(updatedTeacher.id, updatedTeacher)
+      } else {
+        // Add new teacher
+        const newTeacher = {
+          ...updatedTeacher,
+          id: Math.max(...teachers.map((t) => t.id)) + 1,
+        }
+        newTeachers = [...teachers, newTeacher]
+        setTeachers(newTeachers)
+        addToast(
+          `"${updatedTeacher.name}" teacher was successfully added`,
+          'success'
+        )
+      }
+    } else {
+      newTeachers = teachers
     }
+
+    // Save to localStorage
+    localStorage.setItem('teachers', JSON.stringify(newTeachers))
     handleModalClose()
   }
 
@@ -517,23 +493,72 @@ export default function TeachersPage() {
             letterSpacing: '0.05em',
           }}
         >
-          ASOSIY / <span style={{ color: '#e11d48' }}>USTOZLAR</span>
+          MAIN / <span style={{ color: '#e11d48' }}>TEACHERS</span>
         </div>
 
         <div style={{ padding: '12px 32px 24px' }}>
-          <h1
+          <div
             style={{
-              fontSize: 28,
-              fontWeight: 800,
-              color: '#0f172a',
-              letterSpacing: '-0.02em',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            Ustozlar Jamoasi
-          </h1>
-          <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>
-            LinguaPro malakali o'qituvchilarini boshqarish paneli
-          </p>
+            <div>
+              <h1
+                style={{
+                  fontSize: 28,
+                  fontWeight: 800,
+                  color: '#0f172a',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                Teacher Team
+              </h1>
+              <p style={{ color: '#64748b', fontSize: 14, marginTop: 4 }}>
+                LinguaPro qualified teachers management panel
+              </p>
+            </div>
+            <button
+              onClick={handleAdd}
+              style={{
+                background: '#e11d48',
+                color: '#fff',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: 12,
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                boxShadow: '0 4px 12px rgba(225, 29, 72, 0.15)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#be123c'
+                e.currentTarget.style.transform = 'translateY(-1px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#e11d48'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
+            >
+              <svg
+                width={16}
+                height={16}
+                viewBox='0 0 24 24'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth={2.5}
+              >
+                <line x1='12' y1='5' x2='12' y2='19' />
+                <line x1='5' y1='12' x2='19' y2='12' />
+              </svg>
+              New Teacher
+            </button>
+          </div>
         </div>
 
         <div
@@ -553,7 +578,6 @@ export default function TeachersPage() {
               onDetail={handleDetail}
             />
           ))}
-          <AddCard onAdd={handleAdd} />
         </div>
 
         {/* KPI Section */}
@@ -573,7 +597,7 @@ export default function TeachersPage() {
         >
           <div style={{ flex: 1, minWidth: 300 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
-              Ustozlar Reytingi & KPI
+              Teachers Rating & KPI
             </h2>
             <p
               style={{
@@ -624,12 +648,12 @@ export default function TeachersPage() {
             }}
           >
             <KpiStat
-              label='Jami ustozlar'
+              label='Total teachers'
               value={`${kpiData.totalTeachers} ta`}
               percent={60}
             />
             <KpiStat
-              label='Faol guruhlar'
+              label='Active groups'
               value={`${kpiData.activeGroups} ta`}
               percent={86}
             />
@@ -639,6 +663,7 @@ export default function TeachersPage() {
 
       {/* Modal */}
       <TeacherModal
+        key={modalAction}
         teacher={selectedTeacher}
         isOpen={modalOpen}
         onClose={handleModalClose}
