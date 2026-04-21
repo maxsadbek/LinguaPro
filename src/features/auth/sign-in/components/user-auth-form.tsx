@@ -19,28 +19,26 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 
+// Form validatsiyasi
 const formSchema = z.object({
-  email: z.email({
-    error: (iss) => (iss.input === '' ? 'Please enter your email.' : undefined),
-  }),
+  email: z.string().email('Iltimos, yaroqli email manzilini kiriting.'),
   password: z
     .string()
-    .min(1, 'Please enter your password.')
-    .min(7, 'Password must be at least 7 characters long.'),
+    .min(1, 'Parolni kiritishingiz shart.')
+    .min(7, 'Parol kamida 7 ta belgidan iborat bo\'lishi kerak.'),
 })
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
   redirectTo?: string
 }
 
-export function UserAuthForm({
-  className,
-  redirectTo,
-  ...props
-}: UserAuthFormProps) {
+export function UserAuthForm({ className, redirectTo, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { auth } = useAuthStore()
+
+  // Fokus bo'lganda rang o'zgarishi uchun style klassi
+  const focusInputStyle = "focus-visible:ring-[#C70C3D] focus-visible:ring-offset-0"
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,28 +51,26 @@ export function UserAuthForm({
   function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
 
+    // Simulyatsiya (login jarayoni)
     toast.promise(sleep(2000), {
-      loading: 'Signing in...',
+      loading: 'Tizimga kirilmoqda...',
       success: () => {
         setIsLoading(false)
-
         const mockUser = {
           accountNo: 'USR001',
           email: data.email,
-           role: 'user' as const,
+          role: 'user' as const,
           exp: Date.now() + 24 * 60 * 60 * 1000,
         }
 
         auth.setUser(mockUser)
         auth.setAccessToken('mock-access-token')
-
         navigate({ to: redirectTo || '/', replace: true })
-
-        return `Welcome back, ${data.email}!`
+        return `Xush kelibsiz!`
       },
       error: () => {
         setIsLoading(false)
-        return 'Login failed. Please try again.'
+        return 'Login muvaffaqiyatsiz. Qayta urinib ko\'ring.'
       },
     })
   }
@@ -83,49 +79,66 @@ export function UserAuthForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className={cn('grid gap-3', className)}
+        className={cn('grid gap-4', className)}
         {...props}
       >
-        {/* EMAIL */}
+        {/* EMAIL FIELD */}
         <FormField
           control={form.control}
           name='email'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Elektron pochta</FormLabel>
               <FormControl>
-                <Input placeholder='example@gmail.com' {...field} />
+                <Input 
+                  placeholder='example@email.com' 
+                  className={focusInputStyle} 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {/* PASSWORD */}
+        {/* PASSWORD FIELD */}
         <FormField
           control={form.control}
           name='password'
           render={({ field }) => (
-            <FormItem className='relative'>
-              <FormLabel>Password</FormLabel>
+            <FormItem>
+              <div className='flex items-center justify-between'>
+                <FormLabel>Parol</FormLabel>
+                <Link
+                  to='/forgot-password'
+                  className='text-sm font-medium text-[#C70C3D] hover:underline'
+                >
+                  Parolni unutdingizmi?
+                </Link>
+              </div>
               <FormControl>
-                <PasswordInput placeholder='********' {...field} />
+                <PasswordInput 
+                  placeholder='********' 
+                  className={focusInputStyle} 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
-              <Link
-                to='/forgot-password'
-                className='absolute inset-e-0 -top-0.5 text-sm font-medium text-muted-foreground hover:opacity-75'
-              >
-                Forgot password?
-              </Link>
             </FormItem>
           )}
         />
 
-        {/* BUTTON */}
-        <Button className='mt-2' disabled={isLoading}>
-          {isLoading ? <Loader2 className='animate-spin' /> : <LogIn />}
-          Sign in
+        {/* SUBMIT BUTTON */}
+        <Button 
+          className='mt-2 w-full bg-[#C70C3D] hover:bg-[#C70C3D]/90 text-white transition-colors' 
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+          ) : (
+            <LogIn className='mr-2 h-4 w-4' />
+          )}
+          Tizimga kirish
         </Button>
       </form>
     </Form>
