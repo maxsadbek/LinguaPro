@@ -17,11 +17,11 @@ import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors403RouteImport } from './routes/(errors)/403'
 import { Route as errors401RouteImport } from './routes/(errors)/401'
+import { Route as authVerifyPasswordRouteImport } from './routes/(auth)/verify-password'
 import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
-import { Route as authVerifyPasswordRouteImport } from './routes/(auth)/verify-password'
 import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_authenticated/route'
 import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
 import { Route as AuthenticatedTeacherDashboardRouteRouteImport } from './routes/_authenticated/teacher-dashboard/route'
@@ -92,6 +92,11 @@ const errors401Route = errors401RouteImport.update({
   path: '/401',
   getParentRoute: () => rootRouteImport,
 } as any)
+const authVerifyPasswordRoute = authVerifyPasswordRouteImport.update({
+  id: '/(auth)/verify-password',
+  path: '/verify-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authSignUpRoute = authSignUpRouteImport.update({
   id: '/(auth)/sign-up',
   path: '/sign-up',
@@ -110,11 +115,6 @@ const authSignInRoute = authSignInRouteImport.update({
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   id: '/(auth)/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const authVerifyPasswordRoute = authVerifyPasswordRouteImport.update({
-  id: '/(auth)/verify-password',
-  path: '/verify-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClerkAuthenticatedRouteRoute = ClerkAuthenticatedRouteRouteImport.update({
@@ -619,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof errors401RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(auth)/verify-password': {
+      id: '/(auth)/verify-password'
+      path: '/verify-password'
+      fullPath: '/verify-password'
+      preLoaderRoute: typeof authVerifyPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)/sign-up': {
       id: '/(auth)/sign-up'
       path: '/sign-up'
@@ -645,13 +652,6 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof authForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/(auth)/verify-password': {
-      id: '/(auth)/verify-password'
-      path: '/verify-password'
-      fullPath: '/verify-password'
-      preLoaderRoute: typeof authVerifyPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clerk/_authenticated': {
