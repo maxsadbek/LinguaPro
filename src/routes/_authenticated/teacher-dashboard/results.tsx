@@ -1,23 +1,54 @@
+import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { BarChart3, TrendingUp, TrendingDown, Download } from 'lucide-react'
+import {
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  Download,
+  Plus,
+} from 'lucide-react'
+import { AddResultModal } from '@/components/teacher/modals/AddResultModal'
 
-export const Route = createFileRoute('/_authenticated/teacher-dashboard/results')({
+export const Route = createFileRoute(
+  '/_authenticated/teacher-dashboard/results'
+)({
   component: ResultsPage,
 })
 
 function ResultsPage() {
+  const [open, setOpen] = useState(false)
+
   return (
     <div>
       <div className='mb-8 flex items-center justify-between'>
         <div>
           <h1 className='text-3xl font-bold text-gray-800'>Results</h1>
-          <p className='mt-2 text-gray-500'>View and analyze student performance</p>
+          <p className='mt-2 text-gray-500'>
+            View and analyze student performance
+          </p>
         </div>
-        <button className='flex items-center gap-2 rounded-xl border border-gray-200 px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50'>
-          <Download size={18} />
-          Export Report
-        </button>
+        <div className='flex items-center gap-3'>
+          <button
+            onClick={() => setOpen(true)}
+            className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b80035] to-[#e11d48] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl'
+          >
+            <Plus size={18} />
+            Add Result
+          </button>
+          <button className='flex items-center gap-2 rounded-xl border border-gray-200 px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50'>
+            <Download size={18} />
+            Export Report
+          </button>
+        </div>
       </div>
+
+      <AddResultModal
+        open={open}
+        onOpenChange={setOpen}
+        onSave={() => {
+          setOpen(false)
+        }}
+      />
 
       {/* Stats Cards */}
       <div className='mb-8 grid grid-cols-4 gap-4'>
@@ -86,31 +117,77 @@ function ResultsPage() {
         <table className='w-full'>
           <thead>
             <tr className='border-b border-gray-200'>
-              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>Student</th>
-              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>Assessment</th>
-              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>Score</th>
-              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>Date</th>
-              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>Status</th>
+              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>
+                Student
+              </th>
+              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>
+                Assessment
+              </th>
+              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>
+                Score
+              </th>
+              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>
+                Date
+              </th>
+              <th className='pb-4 text-left text-sm font-semibold text-gray-600'>
+                Status
+              </th>
             </tr>
           </thead>
           <tbody>
             {[
-              { name: 'Marc Lawson', assessment: 'Unit 5 Quiz', score: '95%', date: 'Apr 20, 2026', status: 'excellent' },
-              { name: 'Sarah Kim', assessment: 'Essay Writing', score: '88%', date: 'Apr 19, 2026', status: 'good' },
-              { name: 'Javier Delgado', assessment: 'Vocabulary Test', score: '72%', date: 'Apr 18, 2026', status: 'needs improvement' },
-              { name: 'Emily Chen', assessment: 'Unit 5 Quiz', score: '91%', date: 'Apr 20, 2026', status: 'excellent' },
+              {
+                name: 'Marc Lawson',
+                assessment: 'Unit 5 Quiz',
+                score: '95%',
+                date: 'Apr 20, 2026',
+                status: 'excellent',
+              },
+              {
+                name: 'Sarah Kim',
+                assessment: 'Essay Writing',
+                score: '88%',
+                date: 'Apr 19, 2026',
+                status: 'good',
+              },
+              {
+                name: 'Javier Delgado',
+                assessment: 'Vocabulary Test',
+                score: '72%',
+                date: 'Apr 18, 2026',
+                status: 'needs improvement',
+              },
+              {
+                name: 'Emily Chen',
+                assessment: 'Unit 5 Quiz',
+                score: '91%',
+                date: 'Apr 20, 2026',
+                status: 'excellent',
+              },
             ].map((result, index) => (
-              <tr key={index} className='border-b border-gray-100 last:border-0'>
+              <tr
+                key={index}
+                className='border-b border-gray-100 last:border-0'
+              >
                 <td className='py-4'>
                   <div className='flex items-center gap-3'>
                     <div className='flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-sm font-semibold text-white'>
-                      {result.name.split(' ').map(n => n[0]).join('')}
+                      {result.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
                     </div>
-                    <span className='font-medium text-gray-800'>{result.name}</span>
+                    <span className='font-medium text-gray-800'>
+                      {result.name}
+                    </span>
                   </div>
                 </td>
-                <td className='py-4 text-sm text-gray-600'>{result.assessment}</td>
-                <td className='py-4 text-sm font-semibold text-gray-800'>{result.score}</td>
+                <td className='py-4 text-sm text-gray-600'>
+                  {result.assessment}
+                </td>
+                <td className='py-4 text-sm font-semibold text-gray-800'>
+                  {result.score}
+                </td>
                 <td className='py-4 text-sm text-gray-600'>{result.date}</td>
                 <td className='py-4'>
                   <span
@@ -122,7 +199,8 @@ function ResultsPage() {
                           : 'bg-yellow-100 text-yellow-700'
                     }`}
                   >
-                    {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
+                    {result.status.charAt(0).toUpperCase() +
+                      result.status.slice(1)}
                   </span>
                 </td>
               </tr>
