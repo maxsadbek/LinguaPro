@@ -11,17 +11,15 @@ import { ForgotPasswordForm } from './components/forgot-password-form'
 export function ForgotPassword() {
   return (
     <AuthLayout>
-      <Card className='max-w-md gap-4 sm:min-w-sm py-8'>
+      <Card className='w-full max-w-lg gap-4 px-6 py-8 sm:px-8'>
         <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>
-            Parolni tiklash!
+          <CardTitle className='text-xl tracking-tight'>
+            Forgot Password
           </CardTitle>
           <CardDescription>
-            Ro‘yxatdan o‘tgan ma’lumotingizni kiriting <br />
-            va biz sizga parolni tiklash uchun havola yuboramiz.
+            Username va phone raqamingizni kiriting.
           </CardDescription>
         </CardHeader>
-
         <CardContent>
           <ForgotPasswordForm />
         </CardContent>

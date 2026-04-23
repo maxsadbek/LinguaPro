@@ -48,6 +48,7 @@ If you want to update components using the Shadcn CLI (e.g., `npx shadcn@latest 
 - sidebar
 - switch
 
+
 **Notes:**
 
 - **Modified Components**: These have general updates, potentially including RTL adjustments.
@@ -98,6 +99,8 @@ Start the server
 ```bash
   pnpm run dev
 ```
+
+
 
 ## Sponsoring this project ❤️
 

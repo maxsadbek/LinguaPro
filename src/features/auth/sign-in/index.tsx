@@ -1,4 +1,4 @@
-import {  useSearch } from '@tanstack/react-router'
+import { useSearch } from '@tanstack/react-router'
 import {
   Card,
   CardContent,
@@ -14,12 +14,11 @@ export function SignIn() {
 
   return (
     <AuthLayout>
-      {/* max-w-md o'rniga max-w-lg yoki max-w-xl qo'ying */}
-      <Card className='w-full max-w-lg gap-4 px-6 sm:px-8 py-8'>
+      <Card className='w-full max-w-lg gap-4 px-6 py-8 sm:px-8'>
         <CardHeader>
           <CardTitle className='text-xl tracking-tight'>Tizimga kirish</CardTitle>
           <CardDescription>
-            Hisobingizga kirish uchun elektron pochta va parolingizni kiriting.
+            Hisobingizga kirish uchun username va password kiriting.
           </CardDescription>
         </CardHeader>
         <CardContent>

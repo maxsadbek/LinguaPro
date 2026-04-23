@@ -19,9 +19,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 
-// Form validatsiyasi
 const formSchema = z.object({
-  email: z.string().email('Iltimos, yaroqli email manzilini kiriting.'),
+  username: z.string().min(1, 'Username ni kiritishingiz shart.'),
   password: z
     .string()
     .min(1, 'Parolni kiritishingiz shart.')
@@ -41,14 +40,13 @@ export function UserAuthForm({
   const navigate = useNavigate()
   const { auth } = useAuthStore()
 
-  // Fokus bo'lganda rang o'zgarishi uchun style klassi
   const focusInputStyle =
     'focus-visible:ring-[#C70C3D] focus-visible:ring-offset-0'
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      username: '',
       password: '',
     },
   })
@@ -56,29 +54,24 @@ export function UserAuthForm({
   function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
 
-    // Fake teacher va admin ma'lumotlari asosida rol aniqlash
     let role: 'teacher' | 'admin' | 'user' = 'user'
     let accountNo = 'USR001'
 
-    if (data.email === 'teacher@linguapro.uz' && data.password === '1111111') {
+    if (data.username === 'teacher' && data.password === '1111111') {
       role = 'teacher'
       accountNo = 'TCH001'
-    } else if (
-      data.email.includes('admin') ||
-      data.email === 'admin@linguard.com'
-    ) {
+    } else if (data.username.toLowerCase().includes('admin')) {
       role = 'admin'
       accountNo = 'ADM001'
     }
 
-    // Simulyatsiya (login jarayoni)
     toast.promise(sleep(2000), {
       loading: 'Tizimga kirilmoqda...',
       success: () => {
         setIsLoading(false)
         const mockUser = {
           accountNo,
-          email: data.email,
+          email: data.username,
           role,
           exp: Date.now() + 24 * 60 * 60 * 1000,
         }
@@ -87,7 +80,6 @@ export function UserAuthForm({
         auth.setUser(mockUser)
         auth.setAccessToken('mock-access-token')
 
-        // Rolga qarab redirect
         let redirectPath = '/admin-dashboard'
         if (role === 'teacher') {
           redirectPath = '/teacher-dashboard'
@@ -106,7 +98,7 @@ export function UserAuthForm({
           to: isRoleAllowedRedirect ? redirectTo : redirectPath,
           replace: true,
         })
-        return `Xush kelibsiz!`
+        return 'Xush kelibsiz!'
       },
       error: () => {
         setIsLoading(false)
@@ -122,16 +114,15 @@ export function UserAuthForm({
         className={cn('grid gap-4', className)}
         {...props}
       >
-        {/* EMAIL FIELD */}
         <FormField
           control={form.control}
-          name='email'
+          name='username'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Elektron pochta</FormLabel>
+              <FormLabel>Username</FormLabel>
               <FormControl>
                 <Input
-                  placeholder='example@email.com'
+                  placeholder='Username kiriting'
                   className={focusInputStyle}
                   {...field}
                 />
@@ -141,19 +132,18 @@ export function UserAuthForm({
           )}
         />
 
-        {/* PASSWORD FIELD */}
         <FormField
           control={form.control}
           name='password'
           render={({ field }) => (
             <FormItem>
               <div className='flex items-center justify-between'>
-                <FormLabel>Parol</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <Link
                   to='/forgot-password'
                   className='text-sm font-medium text-[#C70C3D] hover:underline'
                 >
-                  Parolni unutdingizmi?
+                  Forgot password?
                 </Link>
               </div>
               <FormControl>
@@ -168,7 +158,6 @@ export function UserAuthForm({
           )}
         />
 
-        {/* SUBMIT BUTTON */}
         <Button
           className='mt-2 w-full bg-[#C70C3D] text-white transition-colors hover:bg-[#C70C3D]/90'
           disabled={isLoading}

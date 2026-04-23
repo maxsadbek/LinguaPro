@@ -21,6 +21,7 @@ import { Route as authSignUpRouteImport } from './routes/(auth)/sign-up'
 import { Route as authSignIn2RouteImport } from './routes/(auth)/sign-in-2'
 import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
+import { Route as authVerifyPasswordRouteImport } from './routes/(auth)/verify-password'
 import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_authenticated/route'
 import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
 import { Route as AuthenticatedTeacherDashboardRouteRouteImport } from './routes/_authenticated/teacher-dashboard/route'
@@ -109,6 +110,11 @@ const authSignInRoute = authSignInRouteImport.update({
 const authForgotPasswordRoute = authForgotPasswordRouteImport.update({
   id: '/(auth)/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const authVerifyPasswordRoute = authVerifyPasswordRouteImport.update({
+  id: '/(auth)/verify-password',
+  path: '/verify-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClerkAuthenticatedRouteRoute = ClerkAuthenticatedRouteRouteImport.update({
@@ -292,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof authSignInRoute
   '/sign-in-2': typeof authSignIn2Route
   '/sign-up': typeof authSignUpRoute
+  '/verify-password': typeof authVerifyPasswordRoute
   '/401': typeof errors401Route
   '/403': typeof errors403Route
   '/404': typeof errors404Route
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof authSignInRoute
   '/sign-in-2': typeof authSignIn2Route
   '/sign-up': typeof authSignUpRoute
+  '/verify-password': typeof authVerifyPasswordRoute
   '/401': typeof errors401Route
   '/403': typeof errors403Route
   '/404': typeof errors404Route
@@ -375,6 +383,7 @@ export interface FileRoutesById {
   '/(auth)/sign-in': typeof authSignInRoute
   '/(auth)/sign-in-2': typeof authSignIn2Route
   '/(auth)/sign-up': typeof authSignUpRoute
+  '/(auth)/verify-password': typeof authVerifyPasswordRoute
   '/(errors)/401': typeof errors401Route
   '/(errors)/403': typeof errors403Route
   '/(errors)/404': typeof errors404Route
@@ -419,6 +428,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-in-2'
     | '/sign-up'
+    | '/verify-password'
     | '/401'
     | '/403'
     | '/404'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-in-2'
     | '/sign-up'
+    | '/verify-password'
     | '/401'
     | '/403'
     | '/404'
@@ -501,6 +512,7 @@ export interface FileRouteTypes {
     | '/(auth)/sign-in'
     | '/(auth)/sign-in-2'
     | '/(auth)/sign-up'
+    | '/(auth)/verify-password'
     | '/(errors)/401'
     | '/(errors)/403'
     | '/(errors)/404'
@@ -541,6 +553,7 @@ export interface RootRouteChildren {
   authSignInRoute: typeof authSignInRoute
   authSignIn2Route: typeof authSignIn2Route
   authSignUpRoute: typeof authSignUpRoute
+  authVerifyPasswordRoute: typeof authVerifyPasswordRoute
   errors401Route: typeof errors401Route
   errors403Route: typeof errors403Route
   errors404Route: typeof errors404Route
@@ -632,6 +645,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof authForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(auth)/verify-password': {
+      id: '/(auth)/verify-password'
+      path: '/verify-password'
+      fullPath: '/verify-password'
+      preLoaderRoute: typeof authVerifyPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clerk/_authenticated': {
@@ -992,6 +1012,7 @@ const rootRouteChildren: RootRouteChildren = {
   authSignInRoute: authSignInRoute,
   authSignIn2Route: authSignIn2Route,
   authSignUpRoute: authSignUpRoute,
+  authVerifyPasswordRoute: authVerifyPasswordRoute,
   errors401Route: errors401Route,
   errors403Route: errors403Route,
   errors404Route: errors404Route,
