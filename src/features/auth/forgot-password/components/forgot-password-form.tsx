@@ -4,8 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowRight, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
-import { cn, sleep } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -22,7 +21,7 @@ const formSchema = z.object({
   phone: z
     .string()
     .regex(
-      /^\+998 \d{2} \d{3} \d{2} \d{2}$/,
+      /^\+998(?: \d{2}){1,4}$/,
       'Telefon format: +998 90 123 45 67'
     ),
 })
@@ -46,23 +45,11 @@ export function ForgotPasswordForm({
 
   function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
-
-    toast.promise(sleep(2000), {
-      loading: 'Tekshirilmoqda...',
-      success: () => {
-        setIsLoading(false)
-        form.reset({ username: '', phone: '+998 ' })
-        navigate({
-          to: '/verify-password',
-          search: { username: data.username },
-        })
-        return 'Davom eting'
-      },
-      error: () => {
-        setIsLoading(false)
-        return "Xatolik yuz berdi. Qayta urinib ko'ring."
-      },
+    navigate({
+      to: '/verify-password',
+      search: { username: data.username },
     })
+    setIsLoading(false)
   }
 
   const formatPhone = (value: string) => {
@@ -134,6 +121,7 @@ export function ForgotPasswordForm({
         />
 
         <Button
+          type='submit'
           className='mt-2 w-full bg-[#C70C3D] text-white transition-colors hover:bg-[#C70C3D]/90'
           disabled={isLoading}
         >

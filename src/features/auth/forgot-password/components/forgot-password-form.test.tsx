@@ -17,38 +17,48 @@ vi.mock('@/lib/utils', async (orig) => ({
 
 describe('ForgotPasswordForm', () => {
   let screen: RenderResult
-  let emailInput: Locator
+  let usernameInput: Locator
+  let phoneInput: Locator
   let continueButton: Locator
 
   beforeEach(async () => {
     vi.clearAllMocks()
 
     screen = await render(<ForgotPasswordForm />)
-    emailInput = screen.getByRole('textbox', { name: /^Email$/i })
+    usernameInput = screen.getByRole('textbox', { name: /^Username$/i })
+    phoneInput = screen.getByRole('textbox', { name: /^Phone$/i })
     continueButton = screen.getByRole('button', { name: /^Continue$/i })
   })
 
-  it('renders email field and continue button', async () => {
-    await expect.element(emailInput).toBeInTheDocument()
+  it('renders username, phone, and continue button', async () => {
+    await expect.element(usernameInput).toBeInTheDocument()
+    await expect.element(phoneInput).toBeInTheDocument()
     await expect.element(continueButton).toBeInTheDocument()
   })
 
   it('shows validation when submitting empty form', async () => {
+    await userEvent.clear(phoneInput)
     await userEvent.click(continueButton)
+
     await expect
-      .element(screen.getByText(/^Please enter your email\.$/i))
+      .element(screen.getByText(/^Username ni kiriting$/i))
+      .toBeInTheDocument()
+    await expect
+      .element(screen.getByText(/^Telefon format: \+998 90 123 45 67$/i))
       .toBeInTheDocument()
   })
 
-  it('resets the form and navigates to /otp on success', async () => {
-    await userEvent.fill(emailInput, 'a@b.com')
+  it('navigates to verify-password on success', async () => {
+    await userEvent.fill(usernameInput, 'testuser')
+    await userEvent.clear(phoneInput)
+    await userEvent.fill(phoneInput, '+998 90 123 45 67')
     await userEvent.click(continueButton)
 
     await vi.waitFor(() =>
-      expect(navigateMock).toHaveBeenCalledWith({ to: '/otp' })
+      expect(navigateMock).toHaveBeenCalledWith({
+        to: '/verify-password',
+        search: { username: 'testuser' },
+      })
     )
-
-    // Form should reset on success
-    await expect.element(emailInput).toHaveValue('')
   })
 })
