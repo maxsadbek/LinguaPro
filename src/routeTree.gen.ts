@@ -25,6 +25,7 @@ import { Route as ClerkAuthenticatedRouteRouteImport } from './routes/clerk/_aut
 import { Route as ClerkauthRouteRouteImport } from './routes/clerk/(auth)/route'
 import { Route as AuthenticatedTeacherDashboardRouteRouteImport } from './routes/_authenticated/teacher-dashboard/route'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as AuthenticatedAdminDashboardRouteRouteImport } from './routes/_authenticated/admin-dashboard/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTeachersIndexRouteImport } from './routes/_authenticated/teachers/index'
 import { Route as AuthenticatedTeacherDashboardIndexRouteImport } from './routes/_authenticated/teacher-dashboard/index'
@@ -128,6 +129,12 @@ const AuthenticatedSettingsRouteRoute =
   AuthenticatedSettingsRouteRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminDashboardRouteRoute =
+  AuthenticatedAdminDashboardRouteRouteImport.update({
+    id: '/admin-dashboard',
+    path: '/admin-dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
@@ -278,6 +285,7 @@ const AuthenticatedErrorsErrorRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
+  '/admin-dashboard': typeof AuthenticatedAdminDashboardRouteRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/teacher-dashboard': typeof AuthenticatedTeacherDashboardRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
@@ -317,6 +325,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/clerk': typeof ClerkAuthenticatedRouteRouteWithChildren
+  '/admin-dashboard': typeof AuthenticatedAdminDashboardRouteRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/sign-in': typeof authSignInRoute
   '/sign-in-2': typeof authSignIn2Route
@@ -357,6 +366,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/clerk': typeof ClerkRouteRouteWithChildren
+  '/_authenticated/admin-dashboard': typeof AuthenticatedAdminDashboardRouteRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/_authenticated/teacher-dashboard': typeof AuthenticatedTeacherDashboardRouteRouteWithChildren
   '/clerk/(auth)': typeof ClerkauthRouteRouteWithChildren
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/clerk'
+    | '/admin-dashboard'
     | '/settings'
     | '/teacher-dashboard'
     | '/forgot-password'
@@ -441,6 +452,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/clerk'
+    | '/admin-dashboard'
     | '/forgot-password'
     | '/sign-in'
     | '/sign-in-2'
@@ -480,6 +492,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/clerk'
+    | '/_authenticated/admin-dashboard'
     | '/_authenticated/settings'
     | '/_authenticated/teacher-dashboard'
     | '/clerk/(auth)'
@@ -647,6 +660,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-dashboard': {
+      id: '/_authenticated/admin-dashboard'
+      path: '/admin-dashboard'
+      fullPath: '/admin-dashboard'
+      preLoaderRoute: typeof AuthenticatedAdminDashboardRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/users/': {
@@ -887,6 +907,7 @@ const AuthenticatedTeacherDashboardRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminDashboardRouteRoute: typeof AuthenticatedAdminDashboardRouteRoute
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedTeacherDashboardRouteRoute: typeof AuthenticatedTeacherDashboardRouteRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -902,6 +923,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminDashboardRouteRoute: AuthenticatedAdminDashboardRouteRoute,
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedTeacherDashboardRouteRoute:
     AuthenticatedTeacherDashboardRouteRouteWithChildren,

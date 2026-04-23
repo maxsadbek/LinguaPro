@@ -25,20 +25,25 @@ const formSchema = z.object({
   password: z
     .string()
     .min(1, 'Parolni kiritishingiz shart.')
-    .min(7, 'Parol kamida 7 ta belgidan iborat bo\'lishi kerak.'),
+    .min(7, "Parol kamida 7 ta belgidan iborat bo'lishi kerak."),
 })
 
 interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
   redirectTo?: string
 }
 
-export function UserAuthForm({ className, redirectTo, ...props }: UserAuthFormProps) {
+export function UserAuthForm({
+  className,
+  redirectTo,
+  ...props
+}: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { auth } = useAuthStore()
 
   // Fokus bo'lganda rang o'zgarishi uchun style klassi
-  const focusInputStyle = "focus-visible:ring-[#C70C3D] focus-visible:ring-offset-0"
+  const focusInputStyle =
+    'focus-visible:ring-[#C70C3D] focus-visible:ring-offset-0'
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,26 +56,61 @@ export function UserAuthForm({ className, redirectTo, ...props }: UserAuthFormPr
   function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
 
+    // Fake teacher va admin ma'lumotlari asosida rol aniqlash
+    let role: 'teacher' | 'admin' | 'user' = 'user'
+    let accountNo = 'USR001'
+
+    if (data.email === 'teacher@linguapro.uz' && data.password === '1111111') {
+      role = 'teacher'
+      accountNo = 'TCH001'
+    } else if (
+      data.email.includes('admin') ||
+      data.email === 'admin@linguard.com'
+    ) {
+      role = 'admin'
+      accountNo = 'ADM001'
+    }
+
     // Simulyatsiya (login jarayoni)
     toast.promise(sleep(2000), {
       loading: 'Tizimga kirilmoqda...',
       success: () => {
         setIsLoading(false)
         const mockUser = {
-          accountNo: 'USR001',
+          accountNo,
           email: data.email,
-          role: 'user' as const,
+          role,
           exp: Date.now() + 24 * 60 * 60 * 1000,
         }
 
+        sessionStorage.setItem('linguapro_user', JSON.stringify(mockUser))
         auth.setUser(mockUser)
         auth.setAccessToken('mock-access-token')
-        navigate({ to: redirectTo || '/', replace: true })
+
+        // Rolga qarab redirect
+        let redirectPath = '/admin-dashboard'
+        if (role === 'teacher') {
+          redirectPath = '/teacher-dashboard'
+        }
+
+        const isRoleAllowedRedirect = (() => {
+          if (!redirectTo) return false
+          if (role === 'teacher')
+            return redirectTo.startsWith('/teacher-dashboard')
+          if (role === 'admin')
+            return !redirectTo.startsWith('/teacher-dashboard')
+          return false
+        })()
+
+        navigate({
+          to: isRoleAllowedRedirect ? redirectTo : redirectPath,
+          replace: true,
+        })
         return `Xush kelibsiz!`
       },
       error: () => {
         setIsLoading(false)
-        return 'Login muvaffaqiyatsiz. Qayta urinib ko\'ring.'
+        return "Login muvaffaqiyatsiz. Qayta urinib ko'ring."
       },
     })
   }
@@ -90,10 +130,10 @@ export function UserAuthForm({ className, redirectTo, ...props }: UserAuthFormPr
             <FormItem>
               <FormLabel>Elektron pochta</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder='example@email.com' 
-                  className={focusInputStyle} 
-                  {...field} 
+                <Input
+                  placeholder='example@email.com'
+                  className={focusInputStyle}
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -117,10 +157,10 @@ export function UserAuthForm({ className, redirectTo, ...props }: UserAuthFormPr
                 </Link>
               </div>
               <FormControl>
-                <PasswordInput 
-                  placeholder='********' 
-                  className={focusInputStyle} 
-                  {...field} 
+                <PasswordInput
+                  placeholder='********'
+                  className={focusInputStyle}
+                  {...field}
                 />
               </FormControl>
               <FormMessage />
@@ -129,8 +169,8 @@ export function UserAuthForm({ className, redirectTo, ...props }: UserAuthFormPr
         />
 
         {/* SUBMIT BUTTON */}
-        <Button 
-          className='mt-2 w-full bg-[#C70C3D] hover:bg-[#C70C3D]/90 text-white transition-colors' 
+        <Button
+          className='mt-2 w-full bg-[#C70C3D] text-white transition-colors hover:bg-[#C70C3D]/90'
           disabled={isLoading}
         >
           {isLoading ? (
