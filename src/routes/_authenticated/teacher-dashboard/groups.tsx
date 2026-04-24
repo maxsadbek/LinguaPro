@@ -101,7 +101,7 @@ const students: Student[] = [
 
 function GroupsPage() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
-  const [studentList, setStudentList] = useState<Student[]>(students)
+  const [studentList] = useState<Student[]>(students)
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -112,15 +112,6 @@ function GroupsPage() {
     room: '',
     students: 0,
   })
-
-  const handleAttendanceChange = (
-    studentId: string,
-    status: 'present' | 'late' | 'absent'
-  ) => {
-    setStudentList((prev) =>
-      prev.map((s) => (s.id === studentId ? { ...s, attendance: status } : s))
-    )
-  }
 
   const filteredStudents = studentList.filter(
     (s) =>
@@ -241,7 +232,7 @@ function GroupsPage() {
           <h1 className='text-3xl font-bold text-gray-800'>
             {selectedGroup.name}
           </h1>
-          <p className='mt-1 text-gray-500'>Manage student attendance</p>
+          <p className='mt-1 text-gray-500'>Group students and statistics</p>
         </div>
       </div>
 
@@ -285,10 +276,10 @@ function GroupsPage() {
                   Attendance
                 </th>
                 <th className='px-4 py-3 text-left text-xs font-semibold text-gray-600'>
-                  Activity
+                  Overall Activity
                 </th>
                 <th className='px-4 py-3 text-left text-xs font-semibold text-gray-600'>
-                  Actions
+                  Grade
                 </th>
               </tr>
             </thead>
@@ -302,43 +293,47 @@ function GroupsPage() {
                     {student.phone}
                   </td>
                   <td className='px-4 py-3'>
-                    <div className='flex items-center gap-1'>
-                      {['present', 'late', 'absent'].map((status) => (
-                        <button
-                          key={status}
-                          onClick={() =>
-                            handleAttendanceChange(
-                              student.id,
-                              status as 'present' | 'late' | 'absent'
-                            )
-                          }
-                          className={`rounded px-2 py-1 text-xs font-semibold capitalize ${
-                            student.attendance === status
-                              ? status === 'present'
-                                ? 'bg-green-500 text-white'
-                                : status === 'late'
-                                  ? 'bg-yellow-500 text-white'
-                                  : 'bg-red-500 text-white'
-                              : 'bg-gray-100 text-gray-600'
-                          }`}
-                        >
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-                  </td>
-                  <td className='px-4 py-3'>
-                    <button
-                      onClick={() => setSelectedStudent(student)}
-                      className='rounded-lg border border-gray-200 p-1.5 text-gray-600 hover:border-[#b80035] hover:text-[#b80035]'
+                    <span
+                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                        student.attendance === 'present'
+                          ? 'bg-green-100 text-green-700'
+                          : student.attendance === 'late'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-red-100 text-red-700'
+                      }`}
                     >
-                      <TrendingUp size={16} />
-                    </button>
+                      {student.attendance === 'present'
+                        ? '92%'
+                        : student.attendance === 'late'
+                          ? '78%'
+                          : '65%'}
+                    </span>
                   </td>
                   <td className='px-4 py-3'>
-                    <button className='rounded-lg border border-gray-200 p-1.5 text-gray-600 hover:border-[#b80035] hover:text-[#b80035]'>
-                      <MoreVertical size={16} />
-                    </button>
+                    <span className='text-sm font-semibold text-blue-600'>
+                      {student.attendance === 'present'
+                        ? '85%'
+                        : student.attendance === 'late'
+                          ? '72%'
+                          : '45%'}
+                    </span>
+                  </td>
+                  <td className='px-4 py-3'>
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                        student.attendance === 'present'
+                          ? 'bg-purple-100 text-purple-700'
+                          : student.attendance === 'late'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-orange-100 text-orange-700'
+                      }`}
+                    >
+                      {student.attendance === 'present'
+                        ? 'A+'
+                        : student.attendance === 'late'
+                          ? 'B+'
+                          : 'C'}
+                    </span>
                   </td>
                 </tr>
               ))}
