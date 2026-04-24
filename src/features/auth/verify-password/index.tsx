@@ -18,15 +18,36 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { cn, sleep } from '@/lib/utils'
 import { AuthCardShell } from '../auth-card-shell'
+import {
+  PASSWORD_REGEX,
+  USERNAME_REGEX,
+  sanitizePassword,
+  sanitizeUsername,
+} from '../validators'
 
 const formSchema = z
   .object({
-    username: z.string().min(1, 'Foydalanuvchi nomini kiriting'),
+    username: z
+      .string()
+      .min(1, 'Foydalanuvchi nomini kiriting')
+      .regex(
+        USERNAME_REGEX,
+        "Foydalanuvchi nomi 3 tadan 20 tagacha lotin harfi, raqam yoki pastki chiziqdan iborat bo'lsin"
+      ),
     new_password: z
       .string()
       .min(1, 'Yangi parolni kiriting')
-      .min(7, "Parol kamida 7 ta belgidan iborat bo'lishi kerak."),
-    confirm_password: z.string().min(1, 'Parolni qayta kiriting'),
+      .regex(
+        PASSWORD_REGEX,
+        "Parol 7 tadan 32 tagacha bo'lsin va bo'sh joy qatnashmasin"
+      ),
+    confirm_password: z
+      .string()
+      .min(1, 'Parolni qayta kiriting')
+      .regex(
+        PASSWORD_REGEX,
+        "Parol 7 tadan 32 tagacha bo'lsin va bo'sh joy qatnashmasin"
+      ),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: 'Parollar bir xil emas',
@@ -91,7 +112,11 @@ export function VerifyPassword() {
                   <Input
                     placeholder='Foydalanuvchi nomini kiriting'
                     className={focusInputStyle}
+                    maxLength={20}
                     {...field}
+                    onChange={(e) =>
+                      field.onChange(sanitizeUsername(e.target.value))
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -109,7 +134,11 @@ export function VerifyPassword() {
                   <PasswordInput
                     placeholder='Yangi parolni kiriting'
                     className={focusInputStyle}
+                    maxLength={32}
                     {...field}
+                    onChange={(e) =>
+                      field.onChange(sanitizePassword(e.target.value))
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -127,7 +156,11 @@ export function VerifyPassword() {
                   <PasswordInput
                     placeholder='Parolni yana bir bor kiriting'
                     className={focusInputStyle}
+                    maxLength={32}
                     {...field}
+                    onChange={(e) =>
+                      field.onChange(sanitizePassword(e.target.value))
+                    }
                   />
                 </FormControl>
                 <FormMessage />

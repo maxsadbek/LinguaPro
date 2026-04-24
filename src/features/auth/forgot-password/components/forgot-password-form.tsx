@@ -15,32 +15,26 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  PHONE_DIGITS_REGEX,
+  USERNAME_REGEX,
+  formatPhoneDigits,
+  sanitizePhoneDigits,
+  sanitizeUsername,
+} from '../../validators'
 
 const formSchema = z.object({
-  username: z.string().min(1, 'Foydalanuvchi nomini kiriting'),
+  username: z
+    .string()
+    .min(1, 'Foydalanuvchi nomini kiriting')
+    .regex(
+      USERNAME_REGEX,
+      "Foydalanuvchi nomi 3 tadan 20 tagacha lotin harfi, raqam yoki pastki chiziqdan iborat bo'lsin"
+    ),
   phone: z
     .string()
-    .regex(/^\+998 \d{2}-\d{3}-\d{2}-\d{2}$/, 'Telefon format: +998 90-123-45-67'),
+    .regex(PHONE_DIGITS_REGEX, "Telefon raqamida +998 dan keyin 9 ta son bo'lsin"),
 })
-
-const PHONE_PREFIX = '+998 '
-
-function formatPhone(value: string) {
-  const digits = value.replace(/\D/g, '').slice(0, 9)
-  const part1 = digits.slice(0, 2)
-  const part2 = digits.slice(2, 5)
-  const part3 = digits.slice(5, 7)
-  const part4 = digits.slice(7, 9)
-
-  let result = PHONE_PREFIX
-
-  if (part1) result += part1
-  if (part2) result += `-${part2}`
-  if (part3) result += `-${part3}`
-  if (part4) result += `-${part4}`
-
-  return result
-}
 
 export function ForgotPasswordForm({
   className,
@@ -55,7 +49,7 @@ export function ForgotPasswordForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: '',
-      phone: PHONE_PREFIX,
+      phone: '',
     },
   })
 
@@ -85,7 +79,9 @@ export function ForgotPasswordForm({
                 <Input
                   placeholder='Foydalanuvchi nomini kiriting'
                   className={focusInputStyle}
+                  maxLength={20}
                   {...field}
+                  onChange={(e) => field.onChange(sanitizeUsername(e.target.value))}
                 />
               </FormControl>
               <FormMessage />
@@ -100,16 +96,23 @@ export function ForgotPasswordForm({
             <FormItem>
               <FormLabel>Telefon raqami</FormLabel>
               <FormControl>
-                <Input
-                  value={field.value}
-                  inputMode='numeric'
-                  className={focusInputStyle}
-                  placeholder='+998 90-123-45-67'
-                  onChange={(e) => field.onChange(formatPhone(e.target.value))}
-                  onFocus={() => {
-                    if (!field.value) field.onChange(PHONE_PREFIX)
-                  }}
-                />
+                <div className='flex items-center rounded-md border border-input bg-transparent shadow-xs transition-all focus-within:border-[#C70C3D] focus-within:ring-2 focus-within:ring-[#C70C3D]/30'>
+                  <span className='border-r border-input px-3 text-sm text-muted-foreground'>
+                    +998
+                  </span>
+                  <Input
+                    value={formatPhoneDigits(field.value)}
+                    inputMode='numeric'
+                    className={cn(
+                      'border-0 shadow-none focus:border-0 focus:ring-0 focus-visible:ring-0',
+                      focusInputStyle
+                    )}
+                    placeholder='90-123-45-67'
+                    onChange={(e) =>
+                      field.onChange(sanitizePhoneDigits(e.target.value))
+                    }
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
