@@ -1,6 +1,6 @@
 import { Link, useParams } from '@tanstack/react-router'
 import { teachersData } from '@/data/teachers-data'
-import { Calendar, ChevronLeft, MapPin, Users } from 'lucide-react'
+import { Calendar, ChevronLeft, MapPin, Trash2, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {

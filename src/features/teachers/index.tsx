@@ -37,6 +37,8 @@ interface Teacher {
   name: string
   initials: string
   subject: string
+  email?: string
+  level?: string
   badgeColor: {
     bg: string
     text: string
@@ -488,6 +490,29 @@ export default function TeachersPage() {
     null
   )
 
+  // Teacher modals state
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    level: '',
+    experience: '',
+    avatar: '',
+  })
+  const [addFormData, setAddFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    level: '',
+    experience: '',
+    avatar: '',
+  })
+
   const getFilteredGroups = () => {
     if (!selectedTeacherForGroups) return []
 
@@ -764,25 +789,132 @@ export default function TeachersPage() {
   }
 
   const handleAdd = () => {
-    // Placeholder for teacher creation functionality
-    alert('Teacher creation functionality will be implemented')
+    setAddFormData({
+      name: '',
+      email: '',
+      phone: '',
+      level: '',
+      experience: '',
+      avatar: '',
+    })
+    setAddModalOpen(true)
   }
 
   const handleEdit = (teacher: Teacher) => {
-    // Placeholder for teacher edit functionality
-    alert(`Edit teacher: ${teacher.name}`)
+    setSelectedTeacher(teacher)
+    setEditFormData({
+      name: teacher.name,
+      email: teacher.email || '',
+      phone: teacher.phone,
+      level: teacher.level || '',
+      experience: teacher.experience.toString(),
+      avatar: teacher.avatar || '',
+    })
+    setEditModalOpen(true)
   }
 
   const handleDelete = (teacher: Teacher) => {
-    // Placeholder for teacher delete functionality
-    if (window.confirm(`Delete teacher: ${teacher.name}?`)) {
-      alert(`Teacher ${teacher.name} deleted`)
-    }
+    setSelectedTeacher(teacher)
+    setDeleteModalOpen(true)
   }
 
   const handleDetail = (teacher: Teacher) => {
-    // Placeholder for teacher detail functionality
-    alert(`Teacher details: ${teacher.name}`)
+    setSelectedTeacher(teacher)
+    setDetailModalOpen(true)
+  }
+
+  const handleEditSave = () => {
+    if (!selectedTeacher) return
+
+    const updatedTeachers = teachers.map((teacher) =>
+      teacher.id === selectedTeacher.id
+        ? {
+            ...teacher,
+            name: editFormData.name,
+            subject: teacher.subject, // Keep original subject since it's not in edit form
+            email: editFormData.email,
+            phone: editFormData.phone,
+            level: editFormData.level,
+            experience: parseInt(editFormData.experience) || 0,
+            avatar: editFormData.avatar,
+          }
+        : teacher
+    )
+
+    setTeachers(updatedTeachers)
+    localStorage.setItem('teachers', JSON.stringify(updatedTeachers))
+    setEditModalOpen(false)
+    setSelectedTeacher(null)
+    addToast(
+      `Ustoz "${editFormData.name}" muvaffaqiyatli yangilandi`,
+      'success'
+    )
+  }
+
+  const handleDeleteConfirm = () => {
+    if (!selectedTeacher) return
+
+    const updatedTeachers = teachers.filter(
+      (teacher) => teacher.id !== selectedTeacher.id
+    )
+
+    setTeachers(updatedTeachers)
+    localStorage.setItem('teachers', JSON.stringify(updatedTeachers))
+    setDeleteModalOpen(false)
+    setSelectedTeacher(null)
+    addToast(
+      `Teacher "${selectedTeacher.name}" deleted successfully`,
+      'success'
+    )
+  }
+
+  const handleAddSave = () => {
+    if (!addFormData.name || !addFormData.phone || !addFormData.experience) {
+      alert("Iltimos, barcha majburiy maydonlarni to'ldiring")
+      return
+    }
+
+    const newTeacher: Teacher = {
+      id: Date.now(), // Unique ID based on timestamp
+      name: addFormData.name,
+      initials: addFormData.name
+        .split(' ')
+        .map((n) => n[0])
+        .join(''),
+      subject: 'General', // Default subject
+      email: addFormData.email,
+      level: addFormData.level,
+      badgeColor: {
+        bg: '#fff1f2',
+        text: '#e11d48',
+        border: '#fda4af',
+        avatarBg: '#fff1f2',
+        avatarFill: '#fb7185',
+      },
+      phone: addFormData.phone,
+      groups: 0,
+      experience: parseInt(addFormData.experience) || 0,
+      rating: 4.5 + Math.random() * 0.5, // Random rating between 4.5-5.0
+      avatar: addFormData.avatar,
+    }
+
+    const updatedTeachers = [...teachers, newTeacher]
+    setTeachers(updatedTeachers)
+    localStorage.setItem('teachers', JSON.stringify(updatedTeachers))
+
+    // Reset form data
+    setAddFormData({
+      name: '',
+      email: '',
+      phone: '',
+      level: '',
+      experience: '',
+      avatar: '',
+    })
+
+    // Close modal
+    setAddModalOpen(false)
+    addToast(`Ustoz "${addFormData.name}" muvaffaqiyatli qo'shildi`, 'success')
   }
 
   const handleTeacherSelect = (teacher: Teacher) => {
@@ -981,169 +1113,6 @@ export default function TeachersPage() {
               ))}
             </div>
 
-            {/* KPI Section */}
-            <div
-              style={{
-                margin: '40px 32px',
-                background: 'linear-gradient(135deg, #e11d48 0%, #9f1239 100%)',
-                borderRadius: 24,
-                padding: '32px',
-                display: 'flex',
-                gap: 40,
-                alignItems: 'center',
-                color: '#fff',
-                flexWrap: 'wrap',
-                boxShadow: '0 20px 25px -5px rgba(225, 29, 72, 0.15)',
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 300 }}>
-                <h2
-                  style={{
-                    fontSize: '20px',
-                    fontWeight: '600',
-                    marginBottom: '16px',
-                  }}
-                >
-                  Add New Student
-                </h2>
-                <p
-                  style={{
-                    fontSize: 14,
-                    opacity: 0.9,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  Add new student to the group
-                </p>
-                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                  <Input
-                    value={newStudent.name}
-                    onChange={(e) =>
-                      setNewStudent((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                    placeholder='e.g., John Smith'
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '4px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                    }}
-                  >
-                    Phone Number
-                  </label>
-                  <Input
-                    value={newStudent.phone}
-                    onChange={(e) =>
-                      setNewStudent((prev) => ({
-                        ...prev,
-                        phone: e.target.value,
-                      }))
-                    }
-                    placeholder='e.g., +998 90 123 45 67'
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '4px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                    }}
-                  >
-                    Attendance
-                  </label>
-                  <select
-                    value={newStudent.attendance}
-                    onChange={(e) =>
-                      setNewStudent((prev) => ({
-                        ...prev,
-                        attendance: e.target.value,
-                      }))
-                    }
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                    }}
-                  >
-                    <option value='present'>Present</option>
-                    <option value='late'>Late</option>
-                    <option value='absent'>Absent</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    style={{
-                      display: 'block',
-                      marginBottom: '4px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                    }}
-                  >
-                    Activity (%)
-                  </label>
-                  <Input
-                    type='number'
-                    min='0'
-                    max='100'
-                    value={newStudent.activity}
-                    onChange={(e) =>
-                      setNewStudent((prev) => ({
-                        ...prev,
-                        activity: parseInt(e.target.value) || 0,
-                      }))
-                    }
-                    placeholder='0-100'
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() => setAddStudentModalOpen(false)}
-                    style={{ flex: 1 }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type='submit'
-                    style={{
-                      flex: 1,
-                      background: '#e11d48',
-                      color: '#fff',
-                      border: 'none',
-                    }}
-                  >
-                    Add Student
-                  </Button>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 20,
-                  minWidth: 200,
-                }}
-              ></div>
-            </div>
           </>
         )}
 
@@ -1935,6 +1904,940 @@ export default function TeachersPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Add Modal */}
+      {addModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setAddModalOpen(false)}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '500px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  margin: 0,
+                  color: '#1f2937',
+                }}
+              >
+                Ustoz qo'shish
+              </h2>
+              <button
+                onClick={() => setAddModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '0',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleAddSave()
+              }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+            >
+              {/* Avatar Upload Section */}
+              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                <div
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    margin: '0 auto 12px',
+                    borderRadius: '12px',
+                    border: '2px dashed #d1d5db',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    background: '#f9fafb',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() =>
+                    document.getElementById('avatar-upload-add')?.click()
+                  }
+                >
+                  {addFormData.avatar ? (
+                    <img
+                      src={addFormData.avatar}
+                      alt='Avatar'
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '12px',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <svg
+                        width={32}
+                        height={32}
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='#9ca3af'
+                        strokeWidth={2}
+                      >
+                        <path d='M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z' />
+                        <path d='M12 22V8M8 12h8' />
+                      </svg>
+                      <svg
+                        width={20}
+                        height={20}
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='#9ca3af'
+                        strokeWidth={2}
+                        style={{ position: 'absolute', bottom: 8, right: 8 }}
+                      >
+                        <path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l3-3h6l3 3h3a2 2 0 0 1 2 2z' />
+                        <circle cx='12' cy='13' r='4' />
+                      </svg>
+                    </>
+                  )}
+                  <Input
+                    type='file'
+                    accept='image/*'
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onloadend = () => {
+                          setAddFormData((prev) => ({
+                            ...prev,
+                            avatar: reader.result as string,
+                          }))
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                    id='avatar-upload-add'
+                  />
+                </div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    fontWeight: '600',
+                  }}
+                >
+                  AVATAR YUKLASH
+                </p>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  To'liq ism (F.I.SH) *
+                </label>
+                <Input
+                  value={addFormData.name}
+                  onChange={(e) =>
+                    setAddFormData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  placeholder='Masalan: Alisher Navoiy'
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Email manzili
+                </label>
+                <Input
+                  type='email'
+                  value={addFormData.email}
+                  onChange={(e) =>
+                    setAddFormData((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
+                  placeholder='example@linguapro.uz'
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Telefon raqami *
+                </label>
+                <Input
+                  value={addFormData.phone}
+                  onChange={(e) =>
+                    setAddFormData((prev) => ({
+                      ...prev,
+                      phone: e.target.value,
+                    }))
+                  }
+                  placeholder='+998 90 123 45 67'
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  O'qituvchi darajasi
+                </label>
+                <select
+                  value={addFormData.level}
+                  onChange={(e) =>
+                    setAddFormData((prev) => ({
+                      ...prev,
+                      level: e.target.value,
+                    }))
+                  }
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    background: 'white',
+                  }}
+                >
+                  <option value=''>Darajani tanlang</option>
+                  <option value='Beginner'>Beginner</option>
+                  <option value='Elementary'>Elementary</option>
+                  <option value='Intermediate'>Intermediate</option>
+                  <option value='Upper-Intermediate'>Upper-Intermediate</option>
+                  <option value='Advanced'>Advanced</option>
+                  <option value='Proficient'>Proficient</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Tajriba (yil) *
+                </label>
+                <Input
+                  type='number'
+                  min='0'
+                  value={addFormData.experience}
+                  onChange={(e) =>
+                    setAddFormData((prev) => ({
+                      ...prev,
+                      experience: e.target.value,
+                    }))
+                  }
+                  placeholder='Yillarda kiriting'
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => setAddModalOpen(false)}
+                  style={{
+                    flex: 1,
+                    background: 'white',
+                    color: '#6b7280',
+                    border: '1px solid #d1d5db',
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Bekor qilish
+                </Button>
+                <Button
+                  type='submit'
+                  style={{
+                    flex: 1,
+                    background: '#dc2626',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Saqlash
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Edit Modal */}
+      {editModalOpen && selectedTeacher && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setEditModalOpen(false)}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '500px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px',
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  margin: 0,
+                  color: '#1f2937',
+                }}
+              >
+                Ustozni tahrirlash
+              </h2>
+              <button
+                onClick={() => setEditModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '0',
+                  width: '24px',
+                  height: '24px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleEditSave()
+              }}
+              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+            >
+              {/* Avatar Upload Section */}
+              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                <div
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    margin: '0 auto 12px',
+                    borderRadius: '12px',
+                    border: '2px dashed #d1d5db',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    background: '#f9fafb',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() =>
+                    document.getElementById('avatar-upload-edit')?.click()
+                  }
+                >
+                  {editFormData.avatar ? (
+                    <img
+                      src={editFormData.avatar}
+                      alt='Avatar'
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '12px',
+                        objectFit: 'cover',
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <svg
+                        width={32}
+                        height={32}
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='#9ca3af'
+                        strokeWidth={2}
+                      >
+                        <path d='M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z' />
+                        <path d='M12 22V8M8 12h8' />
+                      </svg>
+                      <svg
+                        width={20}
+                        height={20}
+                        viewBox='0 0 24 24'
+                        fill='none'
+                        stroke='#9ca3af'
+                        strokeWidth={2}
+                        style={{ position: 'absolute', bottom: 8, right: 8 }}
+                      >
+                        <path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l3-3h6l3 3h3a2 2 0 0 1 2 2z' />
+                        <circle cx='12' cy='13' r='4' />
+                      </svg>
+                    </>
+                  )}
+                  <Input
+                    type='file'
+                    accept='image/*'
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onloadend = () => {
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            avatar: reader.result as string,
+                          }))
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                    id='avatar-upload-edit'
+                  />
+                </div>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    fontWeight: '600',
+                  }}
+                >
+                  AVATAR YUKLASH
+                </p>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  To'liq ism (F.I.SH) *
+                </label>
+                <Input
+                  value={editFormData.name}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      name: e.target.value,
+                    }))
+                  }
+                  placeholder='Masalan: Alisher Navoiy'
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Email manzili
+                </label>
+                <Input
+                  type='email'
+                  value={editFormData.email}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
+                  placeholder='example@linguapro.uz'
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Telefon raqami *
+                </label>
+                <Input
+                  value={editFormData.phone}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      phone: e.target.value,
+                    }))
+                  }
+                  placeholder='+998 90 123 45 67'
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  O'qituvchi darajasi
+                </label>
+                <select
+                  value={editFormData.level}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      level: e.target.value,
+                    }))
+                  }
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    background: 'white',
+                  }}
+                >
+                  <option value=''>Darajani tanlang</option>
+                  <option value='Beginner'>Beginner</option>
+                  <option value='Elementary'>Elementary</option>
+                  <option value='Intermediate'>Intermediate</option>
+                  <option value='Upper-Intermediate'>Upper-Intermediate</option>
+                  <option value='Advanced'>Advanced</option>
+                  <option value='Proficient'>Proficient</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Tajriba (yil) *
+                </label>
+                <Input
+                  type='number'
+                  min='0'
+                  value={editFormData.experience}
+                  onChange={(e) =>
+                    setEditFormData((prev) => ({
+                      ...prev,
+                      experience: e.target.value,
+                    }))
+                  }
+                  placeholder='Yillarda kiriting'
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => setEditModalOpen(false)}
+                  style={{
+                    flex: 1,
+                    background: 'white',
+                    color: '#6b7280',
+                    border: '1px solid #d1d5db',
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Bekor qilish
+                </Button>
+                <Button
+                  type='submit'
+                  style={{
+                    flex: 1,
+                    background: '#dc2626',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '10px 16px',
+                    borderRadius: '6px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Saqlash
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Detail Modal */}
+      {detailModalOpen && selectedTeacher && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setDetailModalOpen(false)}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '500px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 16,
+                marginBottom: '20px',
+              }}
+            >
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 16,
+                  background: selectedTeacher.badgeColor.avatarBg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: `1px solid ${selectedTeacher.badgeColor.border}40`,
+                  overflow: 'hidden',
+                }}
+              >
+                {selectedTeacher.avatar ? (
+                  <img
+                    src={selectedTeacher.avatar}
+                    alt={selectedTeacher.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <AvatarSilhouette
+                    fill={selectedTeacher.badgeColor.avatarFill}
+                  />
+                )}
+              </div>
+              <div>
+                <h2
+                  style={{
+                    fontSize: '20px',
+                    fontWeight: '600',
+                    margin: 0,
+                    marginBottom: '4px',
+                  }}
+                >
+                  {selectedTeacher.name}
+                </h2>
+              </div>
+            </div>
+
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <PhoneIcon />
+                <span style={{ fontSize: '14px', color: '#64748b' }}>
+                  {selectedTeacher.phone}
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 16,
+                }}
+              >
+                <div
+                  style={{
+                    padding: '12px',
+                    background: '#f8fafc',
+                    borderRadius: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: '#94a3b8',
+                      fontWeight: 600,
+                      marginBottom: 4,
+                    }}
+                  >
+                    GROUPS
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '18px',
+                      fontWeight: 700,
+                      color: '#1e293b',
+                    }}
+                  >
+                    {selectedTeacher.groups}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    padding: '12px',
+                    background: '#f8fafc',
+                    borderRadius: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: '#94a3b8',
+                      fontWeight: 600,
+                      marginBottom: 4,
+                    }}
+                  >
+                    EXPERIENCE
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '18px',
+                      fontWeight: 700,
+                      color: '#1e293b',
+                    }}
+                  >
+                    {selectedTeacher.experience} years
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setDetailModalOpen(false)}
+                style={{
+                  width: '100%',
+                  background: '#e11d48',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '12px',
+                  borderRadius: 8,
+                  fontWeight: 600,
+                }}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Delete Confirmation Modal */}
+      {deleteModalOpen && selectedTeacher && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setDeleteModalOpen(false)}
+        >
+          <div
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              width: '90%',
+              maxWidth: '400px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  background: '#fef2f2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}
+              >
+                <Trash2 style={{ width: 24, height: 24, color: '#dc2626' }} />
+              </div>
+              <h2
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  margin: 0,
+                  marginBottom: '8px',
+                }}
+              >
+                Delete Teacher
+              </h2>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
+                Are you sure you want to delete "{selectedTeacher.name}"? This
+                action cannot be undone.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => setDeleteModalOpen(false)}
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type='button'
+                onClick={handleDeleteConfirm}
+                style={{
+                  flex: 1,
+                  background: '#dc2626',
+                  color: '#fff',
+                  border: 'none',
+                }}
+              >
+                Delete
+              </Button>
+            </div>
           </div>
         </div>
       )}
