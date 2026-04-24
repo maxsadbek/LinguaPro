@@ -16,16 +16,16 @@ function HomeworkPage() {
 
   return (
     <div>
-      <div className='mb-8 flex items-center justify-between'>
+      <div className='mb-6 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-800'>Homework</h1>
-          <p className='mt-2 text-gray-500'>
+          <h1 className='text-2xl md:text-3xl font-bold text-gray-800'>Homework</h1>
+          <p className='mt-1 md:mt-2 text-sm md:text-base text-gray-500'>
             Create and manage homework assignments
           </p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b80035] to-[#e11d48] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl'
+          className='flex w-full sm:w-auto justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-[#b80035] to-[#e11d48] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl'
         >
           <Plus size={18} />
           Yangi vazifa
@@ -39,7 +39,7 @@ function HomeworkPage() {
       />
 
       {/* Filters */}
-      <div className='mb-6 flex items-center gap-4'>
+      <div className='mb-6 flex flex-wrap items-center gap-2 md:gap-4'>
         <button className='flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50'>
           <Filter size={16} />
           Filter
@@ -53,14 +53,14 @@ function HomeworkPage() {
         <button className='rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100'>
           Tugatilgan
         </button>
-        <button className='ml-auto flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50'>
+        <button className='w-full sm:w-auto mt-2 sm:mt-0 sm:ml-auto flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50'>
           <Download size={16} />
           Eksport
         </button>
       </div>
 
       {/* Homework Cards */}
-      <div className='grid grid-cols-2 gap-6'>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6'>
         {[
           {
             title: 'Unit 5 Quiz',

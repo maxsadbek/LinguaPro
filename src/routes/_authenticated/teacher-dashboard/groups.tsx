@@ -123,16 +123,16 @@ function GroupsPage() {
   if (!selectedGroup) {
     return (
       <div>
-        <div className='mb-8 flex items-center justify-between'>
+        <div className='mb-6 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
           <div>
-            <h1 className='text-3xl font-bold text-gray-800'>Groups</h1>
-            <p className='mt-2 text-gray-500'>
+            <h1 className='text-2xl md:text-3xl font-bold text-gray-800'>Groups</h1>
+            <p className='mt-1 md:mt-2 text-sm md:text-base text-gray-500'>
               Manage your student groups and classes
             </p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b80035] to-[#e11d48] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl'
+            className='flex w-full sm:w-auto justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-[#b80035] to-[#e11d48] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl'
           >
             <Plus size={18} />
             Create New Group
@@ -141,7 +141,7 @@ function GroupsPage() {
 
         {/* Search Bar */}
         <div className='mb-6'>
-          <div className='relative w-96'>
+          <div className='relative w-full md:w-96'>
             <Search
               className='absolute top-1/2 left-4 -translate-y-1/2 text-gray-400'
               size={20}
@@ -172,7 +172,7 @@ function GroupsPage() {
         />
 
         {/* Groups Grid */}
-        <div className='grid grid-cols-3 gap-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6'>
           {groups.map((group) => (
             <div
               key={group.id}
@@ -220,28 +220,28 @@ function GroupsPage() {
       </div>
 
       {/* Header */}
-      <div className='mb-8 flex items-center gap-4'>
+      <div className='mb-6 md:mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4'>
         <button
           onClick={() => setSelectedGroup(null)}
-          className='flex items-center gap-2 rounded-full bg-[#b80035] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a00030]'
+          className='flex items-center gap-2 rounded-full bg-[#b80035] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#a00030] shrink-0'
         >
           <ArrowLeft size={16} />
           Back
         </button>
         <div>
-          <h1 className='text-3xl font-bold text-gray-800'>
+          <h1 className='text-2xl md:text-3xl font-bold text-gray-800'>
             {selectedGroup.name}
           </h1>
-          <p className='mt-1 text-gray-500'>Group students and statistics</p>
+          <p className='mt-1 text-sm md:text-base text-gray-500'>Group students and statistics</p>
         </div>
       </div>
 
       {/* Students List Card */}
       <div className='mb-6 rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)]'>
-        <div className='mb-4 flex items-center justify-between'>
+        <div className='mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
           <h2 className='text-lg font-bold text-gray-800'>Students List</h2>
-          <div className='flex items-center gap-3'>
-            <div className='relative'>
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto'>
+            <div className='relative w-full sm:w-auto'>
               <Search
                 className='absolute top-1/2 left-3 -translate-y-1/2 text-gray-400'
                 size={16}
@@ -251,10 +251,10 @@ function GroupsPage() {
                 placeholder='Search...'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className='w-64 rounded-lg border border-gray-200 py-2 pr-3 pl-10 text-sm focus:border-[#b80035] focus:outline-none'
+                className='w-full sm:w-64 rounded-lg border border-gray-200 py-2 pr-3 pl-10 text-sm focus:border-[#b80035] focus:outline-none'
               />
             </div>
-            <button className='flex items-center gap-2 rounded-lg bg-[#b80035] px-4 py-2 text-sm font-semibold text-white'>
+            <button className='flex items-center justify-center gap-2 rounded-lg bg-[#b80035] px-4 py-2 text-sm font-semibold text-white'>
               <Plus size={16} />
               Add Student
             </button>
@@ -262,8 +262,8 @@ function GroupsPage() {
         </div>
 
         {/* Table */}
-        <div className='overflow-hidden rounded-xl border border-gray-100'>
-          <table className='w-full'>
+        <div className='overflow-x-auto rounded-xl border border-gray-100'>
+          <table className='w-full min-w-[600px]'>
             <thead className='bg-gray-50'>
               <tr>
                 <th className='px-4 py-3 text-left text-xs font-semibold text-gray-600'>
@@ -280,6 +280,9 @@ function GroupsPage() {
                 </th>
                 <th className='px-4 py-3 text-left text-xs font-semibold text-gray-600'>
                   Grade
+                </th>
+                <th className='px-4 py-3 text-left text-xs font-semibold text-gray-600'>
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -335,6 +338,16 @@ function GroupsPage() {
                           : 'C'}
                     </span>
                   </td>
+                  <td className='px-4 py-3'>
+                    <div className='flex items-center gap-2'>
+                      <button className='rounded-lg border border-gray-200 p-1.5 text-gray-600 hover:border-blue-500 hover:text-blue-500'>
+                        <MoreVertical size={16} />
+                      </button>
+                      <button className='rounded-lg border border-gray-200 p-1.5 text-gray-600 hover:border-red-500 hover:text-red-500'>
+                        <span className='text-sm font-bold'>×</span>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -356,7 +369,7 @@ function GroupsPage() {
               <span className='text-lg leading-none'>×</span>
             </button>
           </div>
-          <div className='grid grid-cols-3 gap-8'>
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8'>
             <div className='text-center'>
               <p className='text-3xl font-bold text-blue-600'>85%</p>
               <p className='mt-1 text-sm text-gray-600'>Overall Activity</p>
@@ -374,7 +387,7 @@ function GroupsPage() {
       )}
 
       {/* Stats Cards */}
-      <div className='grid grid-cols-3 gap-6'>
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6'>
         <div className='rounded-2xl bg-white p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)]'>
           <div className='flex items-center justify-between'>
             <div>

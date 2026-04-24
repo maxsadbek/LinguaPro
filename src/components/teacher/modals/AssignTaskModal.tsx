@@ -59,11 +59,10 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        showCloseButton={false}
-        className='max-w-[720px] gap-0 overflow-hidden rounded-[28px] border-0 bg-white p-0 shadow-[0_30px_90px_-50px_rgba(2,6,23,0.45)]'
+        className='max-w-[720px] w-[95vw] max-h-[90vh] overflow-y-auto gap-0 rounded-[28px] border-0 bg-white p-0 shadow-[0_30px_90px_-50px_rgba(2,6,23,0.45)]'
       >
         {/* ── Header ── */}
-        <div className='flex items-start justify-between px-10 pt-8'>
+        <div className='flex items-start justify-between px-6 pt-6 md:px-10 md:pt-8'>
           <div>
             <h2 className='text-xl font-extrabold text-slate-900'>
               Yangi vazifa qo'shish
@@ -83,7 +82,7 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
         </div>
 
         {/* ── Body ── */}
-        <div className='px-10 pt-6 pb-8'>
+        <div className='px-6 pt-4 pb-6 md:px-10 md:pt-6 md:pb-8'>
           <div className='flex flex-col gap-5'>
             {/* Task Title */}
             <div className='flex flex-col gap-2'>
@@ -98,7 +97,7 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
             </div>
 
             {/* Group & Deadline */}
-            <div className='grid grid-cols-2 gap-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='flex flex-col gap-2'>
                 <FieldLabel>GURUHNI TANLANG</FieldLabel>
                 <div className='relative'>
@@ -172,7 +171,7 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
         </div>
 
         {/* ── Footer ── */}
-        <div className='flex items-center gap-3 px-10 pb-8'>
+        <div className='flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 px-6 pb-6 md:px-10 md:pb-8'>
           <button
             type='button'
             onClick={handleClose}

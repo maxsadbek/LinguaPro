@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Bell, ChevronDown, LogOut, Search, Settings, User } from 'lucide-react'
+import {
+  Bell,
+  ChevronDown,
+  LogOut,
+  Search,
+  Settings,
+  User,
+  Menu,
+} from 'lucide-react'
 
 type SessionUser = {
   name?: string
@@ -18,7 +26,11 @@ function getInitials(name?: string) {
   return `${first}${last}`.toUpperCase()
 }
 
-export function TeacherNavbar() {
+interface TeacherNavbarProps {
+  onMenuClick?: () => void
+}
+
+export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
   const [sessionUser] = useState<SessionUser | null>(() => {
     const raw = sessionStorage.getItem('linguapro_user')
     if (!raw) return null
@@ -67,18 +79,23 @@ export function TeacherNavbar() {
   }, [open])
 
   return (
-    <header className='sticky top-0 z-50 flex w-full items-center justify-between bg-white/70 px-8 py-4 backdrop-blur-md'>
-      <div className='flex items-center gap-6'>
+    <header className='sticky top-0 z-50 flex w-full items-center justify-between bg-white/70 px-4 py-3 backdrop-blur-md md:px-8 md:py-4'>
+      <div className='flex items-center gap-4 md:gap-6'>
+        {onMenuClick && (
+          <button onClick={onMenuClick} className='md:hidden'>
+            <Menu size={24} />
+          </button>
+        )}
         <Link to='/teacher-dashboard' className='leading-none'>
           <div className='text-lg font-black tracking-tight text-[#b80035]'>
             LINGUAPRO
           </div>
-          <div className='mt-1 text-[11px] font-bold tracking-[0.28em] text-slate-400'>
+          <div className='mt-1 hidden text-[11px] font-bold tracking-[0.28em] text-slate-400 md:block'>
             TEACHER PORTAL
           </div>
         </Link>
 
-        <div className='group relative'>
+        <div className='group relative hidden md:block'>
           <Search
             className='absolute top-1/2 left-3 -translate-y-1/2 text-slate-400'
             size={18}
@@ -91,7 +108,7 @@ export function TeacherNavbar() {
         </div>
       </div>
 
-      <div className='flex items-center gap-6'>
+      <div className='flex items-center gap-4 md:gap-6'>
         <Link
           to='/teacher-dashboard/notifications'
           className='relative rounded-full p-2 hover:bg-slate-100'
@@ -107,19 +124,19 @@ export function TeacherNavbar() {
         >
           <Settings className='text-slate-600' size={20} />
         </Link>
-        <div className='h-8 w-px bg-slate-200'></div>
+        <div className='hidden h-8 w-px bg-slate-200 md:block'></div>
         <div ref={menuRef} className='relative'>
           <button
             type='button'
             onClick={() => setOpen((v) => !v)}
-            className='flex items-center gap-3 rounded-full bg-slate-50 px-3 py-2 shadow-sm ring-1 ring-slate-200 transition hover:bg-white'
+            className='flex items-center gap-2 rounded-full bg-slate-50 px-2 py-2 shadow-sm ring-1 ring-slate-200 transition hover:bg-white md:gap-3 md:px-3'
             aria-haspopup='menu'
             aria-expanded={open}
           >
-            <div className='flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-sm font-extrabold text-rose-700'>
+            <div className='flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-xs font-extrabold text-rose-700 md:h-10 md:w-10 md:text-sm'>
               {initials}
             </div>
-            <div className='min-w-0 text-left'>
+            <div className='hidden min-w-0 text-left md:block'>
               <p className='truncate text-sm leading-4 font-bold text-slate-900'>
                 {sessionUser?.name ?? 'Teacher'}
               </p>

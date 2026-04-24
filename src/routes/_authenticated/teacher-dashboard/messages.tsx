@@ -45,16 +45,16 @@ function MessagesPage() {
 
   return (
     <div>
-      <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-800'>Messages</h1>
-        <p className='mt-2 text-gray-500'>
+      <div className='mb-6 md:mb-8'>
+        <h1 className='text-2xl md:text-3xl font-bold text-gray-800'>Messages</h1>
+        <p className='mt-1 md:mt-2 text-sm md:text-base text-gray-500'>
           Communicate with students and colleagues
         </p>
       </div>
 
-      <div className='grid grid-cols-3 gap-6'>
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
         {/* Conversations List */}
-        <div className='col-span-1 rounded-2xl bg-white p-4 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+        <div className='col-span-1 rounded-2xl bg-white p-4 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)] h-[400px] lg:h-[600px] flex flex-col'>
           <div className='relative mb-4'>
             <Search
               className='absolute top-1/2 left-3 -translate-y-1/2 text-gray-400'
@@ -68,7 +68,7 @@ function MessagesPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className='space-y-2'>
+          <div className='space-y-2 overflow-y-auto flex-1 pr-2'>
             {filtered.map((conv) => {
               const last = conv.messages?.[0]
               const lastTime = last?.timestamp
@@ -118,7 +118,7 @@ function MessagesPage() {
         </div>
 
         {/* Chat Window */}
-        <div className='col-span-2 rounded-2xl bg-white p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+        <div className='col-span-1 lg:col-span-2 rounded-2xl bg-white p-4 md:p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)] flex flex-col h-[500px] lg:h-[600px]'>
           <div className='mb-6 flex items-center justify-between border-b border-gray-200 pb-4'>
             <div className='flex items-center gap-3'>
               <div className='flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-sm font-semibold text-gray-800'>
@@ -145,7 +145,7 @@ function MessagesPage() {
           </div>
 
           {/* Messages */}
-          <div className='mb-4 max-h-96 space-y-4 overflow-y-auto'>
+          <div className='mb-4 flex-1 space-y-4 overflow-y-auto pr-2'>
             {selectedMessages.map((m, idx) => {
               const isMe = m.sender === 'You'
               return (

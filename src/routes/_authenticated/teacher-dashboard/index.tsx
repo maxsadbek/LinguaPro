@@ -56,21 +56,21 @@ const HomeworkRow = ({
   }
 
   return (
-    <div className='flex items-center justify-between border-b border-gray-100 py-4 last:border-0'>
-      <div className='flex items-center gap-4'>
+    <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-gray-100 py-4 last:border-0'>
+      <div className='flex w-full sm:w-auto items-center gap-4'>
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white ${color}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ${color}`}
         >
           {initials}
         </div>
-        <div>
-          <p className='font-semibold text-gray-800'>{name}</p>
-          <p className='text-xs text-gray-500'>
+        <div className='min-w-0 flex-1'>
+          <p className='truncate font-semibold text-gray-800'>{name}</p>
+          <p className='truncate text-xs text-gray-500'>
             {level} • {task}
           </p>
         </div>
       </div>
-      <div className='flex items-center gap-4'>
+      <div className='flex w-full sm:w-auto items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0'>
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[statusType]}`}
         >
@@ -139,8 +139,8 @@ function DashboardPage() {
   return (
     <>
       {/* Welcome Section */}
-      <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-800'>
+      <div className='mb-6 md:mb-8'>
+        <h1 className='text-2xl md:text-3xl font-bold text-gray-800'>
           Welcome back,{' '}
           <span className='text-[#b80035]'>
             {user?.name?.split(' ')[0] || 'Elena'}
@@ -153,7 +153,7 @@ function DashboardPage() {
       </div>
 
       {/* Stats Row */}
-      <div className='mb-8 grid grid-cols-4 gap-5'>
+      <div className='mb-6 md:mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5'>
         <StatCard
           icon={<Users size={24} />}
           value='12'
@@ -189,9 +189,9 @@ function DashboardPage() {
       </div>
 
       {/* Two Column Section */}
-      <div className='mb-8 grid grid-cols-5 gap-6'>
+      <div className='mb-6 md:mb-8 grid grid-cols-1 lg:grid-cols-5 gap-6'>
         {/* Homework Submissions - Left (60%) */}
-        <div className='col-span-3 rounded-2xl bg-white p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+        <div className='col-span-1 lg:col-span-3 rounded-2xl bg-white p-4 md:p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
           <div className='mb-6 flex items-center justify-between'>
             <h2 className='text-lg font-bold text-gray-800'>
               Homework Submissions
@@ -233,7 +233,7 @@ function DashboardPage() {
         </div>
 
         {/* Today's Schedule - Right (40%) */}
-        <div className='col-span-2 rounded-2xl bg-white p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+        <div className='col-span-1 lg:col-span-2 rounded-2xl bg-white p-4 md:p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
           <div className='mb-6 flex items-center justify-between'>
             <h2 className='text-lg font-bold text-gray-800'>
               Today's Schedule

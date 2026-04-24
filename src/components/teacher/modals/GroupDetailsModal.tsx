@@ -109,11 +109,10 @@ export function GroupDetailsModal({ open, onOpenChange }: GroupDetailsModalProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        showCloseButton={false}
-        className="flex h-[700px] max-h-[calc(100vh-32px)] w-[1100px] max-w-[calc(100vw-32px)] gap-0 overflow-hidden rounded-[28px] border-0 bg-white p-0 shadow-[0_32px_80px_-20px_rgba(2,6,23,0.3)]"
+        className="flex flex-col md:flex-row h-[90vh] md:h-[700px] max-h-[calc(100vh-32px)] w-[1100px] max-w-[calc(100vw-32px)] gap-0 overflow-hidden rounded-[28px] border-0 bg-white p-0 shadow-[0_32px_80px_-20px_rgba(2,6,23,0.3)]"
       >
         {/* ── Left Panel ── */}
-        <div className="flex h-full w-[320px] flex-shrink-0 flex-col gap-5 overflow-y-auto bg-slate-50 px-7 py-8">
+        <div className="flex w-full md:w-[320px] flex-shrink-0 flex-col gap-5 overflow-y-auto bg-slate-50 px-6 py-6 md:px-7 md:py-8 border-b md:border-b-0 md:border-r border-slate-200">
           <div>
             <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-rose-600">
               GURUH TAFSILOTLARI
@@ -143,7 +142,7 @@ export function GroupDetailsModal({ open, onOpenChange }: GroupDetailsModalProps
         </div>
 
         {/* ── Right Panel ── */}
-        <div className="flex h-full flex-1 flex-col overflow-hidden px-8 py-8">
+        <div className="flex h-full flex-1 flex-col overflow-hidden px-6 py-6 md:px-8 md:py-8">
           {/* Header */}
           <div className="flex flex-shrink-0 items-center justify-between">
             <h2 className="text-xl font-extrabold text-slate-900">O'quvchilar Ro'yxati</h2>
@@ -168,9 +167,11 @@ export function GroupDetailsModal({ open, onOpenChange }: GroupDetailsModalProps
           </div>
 
           {/* Table — flex-1 + min-h-0 key for proper stretch */}
-          <div className="mt-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
-            {/* Head */}
-            <div className="grid flex-shrink-0 grid-cols-[2fr_1fr_1fr_1.4fr] gap-6 border-b border-slate-100 bg-white px-6 py-3.5">
+          <div className="mt-4 md:mt-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+            <div className="overflow-x-auto flex-1 flex flex-col">
+              <div className="min-w-[600px] flex-1 flex flex-col">
+                {/* Head */}
+                <div className="grid flex-shrink-0 grid-cols-[2fr_1fr_1fr_1.4fr] gap-6 border-b border-slate-100 bg-white px-6 py-3.5">
               {TABLE_COLS.map((col) => (
                 <p key={col} className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-400">
                   {col}
@@ -184,21 +185,23 @@ export function GroupDetailsModal({ open, onOpenChange }: GroupDetailsModalProps
                 <StudentRow key={s.id} student={s} />
               ))}
             </div>
+              </div>
+            </div>
           </div>
 
           {/* Footer buttons */}
-          <div className="mt-5 flex flex-shrink-0 items-center gap-3">
+          <div className="mt-4 md:mt-5 flex flex-col sm:flex-row flex-shrink-0 items-stretch sm:items-center gap-3">
             <button
               type="button"
               onClick={handleClose}
-              className="h-12 flex-1 rounded-full bg-gradient-to-r from-rose-500 to-rose-700 text-sm font-extrabold text-white shadow-lg shadow-rose-500/25 transition hover:opacity-90"
+              className="h-12 w-full sm:w-auto sm:flex-1 rounded-full bg-gradient-to-r from-rose-500 to-rose-700 text-sm font-extrabold text-white shadow-lg shadow-rose-500/25 transition hover:opacity-90"
             >
               Darsni Boshlash
             </button>
             <button
               type="button"
               onClick={handleClose}
-              className="h-12 flex-1 rounded-full border-2 border-rose-600 bg-white text-sm font-extrabold text-rose-600 transition hover:bg-rose-50"
+              className="h-12 w-full sm:w-auto sm:flex-1 rounded-full border-2 border-rose-600 bg-white text-sm font-extrabold text-rose-600 transition hover:bg-rose-50"
             >
               Vazifa Yuklash
             </button>
