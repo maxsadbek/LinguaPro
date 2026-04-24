@@ -5,13 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Check, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -24,16 +17,16 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { cn, sleep } from '@/lib/utils'
-import { AuthLayout } from '../auth-layout'
+import { AuthCardShell } from '../auth-card-shell'
 
 const formSchema = z
   .object({
-    username: z.string().min(1, 'Username ni kiriting'),
+    username: z.string().min(1, 'Foydalanuvchi nomini kiriting'),
     new_password: z
       .string()
       .min(1, 'Yangi parolni kiriting')
       .min(7, "Parol kamida 7 ta belgidan iborat bo'lishi kerak."),
-    confirm_password: z.string().min(1, 'Parolni tasdiqlang'),
+    confirm_password: z.string().min(1, 'Parolni qayta kiriting'),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: 'Parollar bir xil emas',
@@ -42,7 +35,7 @@ const formSchema = z
 
 export function VerifyPassword() {
   const navigate = useNavigate()
-  const search = useSearch({ from: '/(auth)/verify-password' })
+  const search = useSearch({ from: '/(auth)/verify-page' })
   const [isLoading, setIsLoading] = useState(false)
   const focusInputStyle =
     'focus-visible:ring-[#C70C3D] focus-visible:ring-offset-0'
@@ -54,7 +47,7 @@ export function VerifyPassword() {
       new_password: '',
       confirm_password: '',
     },
-  })
+  })  
 
   function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
@@ -79,91 +72,82 @@ export function VerifyPassword() {
   }
 
   return (
-    <AuthLayout>
-      <Card className='w-full max-w-lg gap-4 px-6 py-8 sm:px-8'>
-        <CardHeader>
-          <CardTitle className='text-xl tracking-tight'>
-            Verify Password
-          </CardTitle>
-          <CardDescription>
-            Username, new password va confirm password kiriting.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className={cn('grid gap-4')}
-            >
-              <FormField
-                control={form.control}
-                name='username'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='Username kiriting'
-                        className={focusInputStyle}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <AuthCardShell
+      title='Parolni yangilash'
+      description="Foydalanuvchi nomi, yangi parol va qayta tasdiqlash maydonlarini to'ldiring."
+    >
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className={cn('grid gap-4')}
+        >
+          <FormField
+            control={form.control}
+            name='username'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Foydalanuvchi nomi</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder='Foydalanuvchi nomini kiriting'
+                    className={focusInputStyle}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name='new_password'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>New Password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder='Yangi parol kiriting'
-                        className={focusInputStyle}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name='new_password'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Yangi parol</FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    placeholder='Yangi parolni kiriting'
+                    className={focusInputStyle}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name='confirm_password'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <PasswordInput
-                        placeholder='Parolni qayta kiriting'
-                        className={focusInputStyle}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name='confirm_password'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Parolni qayta kiriting</FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    placeholder='Parolni yana bir bor kiriting'
+                    className={focusInputStyle}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <Button
-                className='mt-2 w-full bg-[#C70C3D] text-white transition-colors hover:bg-[#C70C3D]/90'
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                ) : (
-                  <Check className='mr-2 h-4 w-4' />
-                )}
-                Verify Password
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </AuthLayout>
+          <Button
+            className='mt-2 w-full bg-[#C70C3D] text-white transition-colors hover:bg-[#C70C3D]/90'
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+            ) : (
+              <Check className='mr-2 h-4 w-4' />
+            )}
+            Tasdiqlash
+          </Button>
+        </form>
+      </Form>
+    </AuthCardShell>
   )
 }

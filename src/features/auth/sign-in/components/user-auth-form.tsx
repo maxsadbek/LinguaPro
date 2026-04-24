@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 
 const formSchema = z.object({
-  username: z.string().min(1, 'Username ni kiritishingiz shart.'),
+  username: z.string().min(1, 'Foydalanuvchi nomini kiritishingiz shart.'),
   password: z
     .string()
     .min(1, 'Parolni kiritishingiz shart.')
@@ -123,10 +123,10 @@ export function UserAuthForm({
           name='username'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Foydalanuvchi nomi</FormLabel>
               <FormControl>
                 <Input
-                  placeholder='Username kiriting'
+                  placeholder='Foydalanuvchi nomini kiriting'
                   className={focusInputStyle}
                   {...field}
                 />
@@ -142,17 +142,17 @@ export function UserAuthForm({
           render={({ field }) => (
             <FormItem>
               <div className='flex items-center justify-between'>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>Parol</FormLabel>
                 <Link
                   to='/forgot-password'
                   className='text-sm font-medium text-[#C70C3D] hover:underline'
                 >
-                  Forgot password?
+                  Parolni tiklash
                 </Link>
               </div>
               <FormControl>
                 <PasswordInput
-                  placeholder='********'
+                  placeholder='Parolni kiriting'
                   className={focusInputStyle}
                   {...field}
                 />

@@ -4,7 +4,7 @@ import { type Locator, userEvent } from 'vitest/browser'
 import { UserAuthForm } from './user-auth-form'
 
 const FORM_MESSAGES = {
-  usernameEmpty: 'Username ni kiritishingiz shart.',
+  usernameEmpty: 'Foydalanuvchi nomini kiritishingiz shart.',
   passwordEmpty: 'Parolni kiritishingiz shart.',
 } as const
 
@@ -59,10 +59,12 @@ describe('UserAuthForm', () => {
     beforeEach(async () => {
       vi.clearAllMocks()
       screen = await render(<UserAuthForm />)
-      usernameInput = screen.getByRole('textbox', { name: /^Username$/i })
-      passwordInput = screen.getByLabelText(/^Password$/i)
+      usernameInput = screen.getByRole('textbox', {
+        name: /^Foydalanuvchi nomi$/i,
+      })
+      passwordInput = screen.getByLabelText(/^Parol$/i)
       signInButton = screen.getByRole('button', { name: /^Tizimga kirish$/i })
-      forgotPasswordLink = screen.getByText(/^Forgot password\?$/i)
+      forgotPasswordLink = screen.getByText(/^Parolni tiklash$/i)
     })
 
     it('renders fields, submit button, and forgot password link', async () => {
@@ -118,10 +120,10 @@ describe('UserAuthForm', () => {
     )
 
     await userEvent.fill(
-      getByRole('textbox', { name: /Username/i }),
+      getByRole('textbox', { name: /Foydalanuvchi nomi/i }),
       'admin-user'
     )
-    await userEvent.fill(getByLabelText('Password'), '1234567')
+    await userEvent.fill(getByLabelText('Parol'), '1234567')
 
     await userEvent.click(getByRole('button', { name: /Tizimga kirish/i }))
 

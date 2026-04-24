@@ -25,9 +25,11 @@ describe('ForgotPasswordForm', () => {
     vi.clearAllMocks()
 
     screen = await render(<ForgotPasswordForm />)
-    usernameInput = screen.getByRole('textbox', { name: /^Username$/i })
-    phoneInput = screen.getByRole('textbox', { name: /^Phone$/i })
-    continueButton = screen.getByRole('button', { name: /^Continue$/i })
+    usernameInput = screen.getByRole('textbox', {
+      name: /^Foydalanuvchi nomi$/i,
+    })
+    phoneInput = screen.getByRole('textbox', { name: /^Telefon raqami$/i })
+    continueButton = screen.getByRole('button', { name: /^Davom etish$/i })
   })
 
   it('renders username, phone, and continue button', async () => {
@@ -41,22 +43,22 @@ describe('ForgotPasswordForm', () => {
     await userEvent.click(continueButton)
 
     await expect
-      .element(screen.getByText(/^Username ni kiriting$/i))
+      .element(screen.getByText(/^Foydalanuvchi nomini kiriting$/i))
       .toBeInTheDocument()
     await expect
-      .element(screen.getByText(/^Telefon format: \+998 90 123 45 67$/i))
+      .element(screen.getByText(/^Telefon format: \+998 90-123-45-67$/i))
       .toBeInTheDocument()
   })
 
-  it('navigates to verify-password on success', async () => {
+  it('navigates to verify-page on success', async () => {
     await userEvent.fill(usernameInput, 'testuser')
     await userEvent.clear(phoneInput)
-    await userEvent.fill(phoneInput, '+998 90 123 45 67')
+    await userEvent.fill(phoneInput, '+998 90-123-45-67')
     await userEvent.click(continueButton)
 
     await vi.waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith({
-        to: '/verify-password',
+        to: '/verify-page',
         search: { username: 'testuser' },
       })
     )
