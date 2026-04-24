@@ -1,35 +1,42 @@
+import type { Course } from '@/data/courses-data'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-interface GroupModalProps {
+interface CourseModalProps {
   isOpen: boolean
   onClose: () => void
-  onAddGroup: () => void
-  newGroup: {
-    name: string
-    description: string
-    schedule: string
-    room: string
-    students: number
+  onAddCourse: (course: Omit<Course, 'id'>) => void
+  newCourse: {
+    title: string
+    level: string
+    duration: string
+    groups: string
+    price: string
+    image: string
+    color: string
+    category: 'english' | 'russian' | 'other'
   }
-  setNewGroup: React.Dispatch<
+  setNewCourse: React.Dispatch<
     React.SetStateAction<{
-      name: string
-      description: string
-      schedule: string
-      room: string
-      students: number
+      title: string
+      level: string
+      duration: string
+      groups: string
+      price: string
+      image: string
+      color: string
+      category: 'english' | 'russian' | 'other'
     }>
   >
 }
 
-export function GroupModal({
+export function CourseModal({
   isOpen,
   onClose,
-  onAddGroup,
-  newGroup,
-  setNewGroup,
-}: GroupModalProps) {
+  onAddCourse,
+  newCourse,
+  setNewCourse,
+}: CourseModalProps) {
   if (!isOpen) return null
 
   return (
@@ -46,6 +53,7 @@ export function GroupModal({
         justifyContent: 'center',
         zIndex: 1000,
       }}
+      onClick={onClose}
     >
       <div
         style={{
@@ -57,6 +65,7 @@ export function GroupModal({
           maxHeight: '90vh',
           overflow: 'auto',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div
           style={{
@@ -67,7 +76,7 @@ export function GroupModal({
           }}
         >
           <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>
-            Yangi Guruh Qo&apos;shish
+            Yangi Kurs Qo'shish
           </h2>
           <button
             onClick={onClose}
@@ -86,7 +95,7 @@ export function GroupModal({
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            onAddGroup()
+            onAddCourse(newCourse)
           }}
           style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
         >
@@ -99,14 +108,14 @@ export function GroupModal({
                 fontWeight: '600',
               }}
             >
-              Guruh nomi *
+              Kurs nomi *
             </label>
             <Input
-              value={newGroup.name}
+              value={newCourse.title}
               onChange={(e) =>
-                setNewGroup((prev) => ({ ...prev, name: e.target.value }))
+                setNewCourse((prev) => ({ ...prev, title: e.target.value }))
               }
-              placeholder='Masalan: IELTS 7.5 Morning'
+              placeholder='Masalan: IELTS Academic'
               required
             />
           </div>
@@ -120,97 +129,92 @@ export function GroupModal({
                 fontWeight: '600',
               }}
             >
-              Tavsif
+              Daraja *
             </label>
-            <textarea
-              value={newGroup.description}
+            <Input
+              value={newCourse.level}
               onChange={(e) =>
-                setNewGroup((prev) => ({
+                setNewCourse((prev) => ({ ...prev, level: e.target.value }))
+              }
+              placeholder='Masalan: B1 Intermediate'
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: 'block',
+                marginBottom: '4px',
+                fontSize: '14px',
+                fontWeight: '600',
+              }}
+            >
+              Davomiyligi *
+            </label>
+            <Input
+              value={newCourse.duration}
+              onChange={(e) =>
+                setNewCourse((prev) => ({ ...prev, duration: e.target.value }))
+              }
+              placeholder='Masalan: 3 oy'
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: 'block',
+                marginBottom: '4px',
+                fontSize: '14px',
+                fontWeight: '600',
+              }}
+            >
+              Narxi *
+            </label>
+            <Input
+              value={newCourse.price}
+              onChange={(e) =>
+                setNewCourse((prev) => ({ ...prev, price: e.target.value }))
+              }
+              placeholder='Masalan: 500,000 UZS / oy'
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              style={{
+                display: 'block',
+                marginBottom: '4px',
+                fontSize: '14px',
+                fontWeight: '600',
+              }}
+            >
+              Kategoriya *
+            </label>
+            <select
+              value={newCourse.category}
+              onChange={(e) =>
+                setNewCourse((prev) => ({
                   ...prev,
-                  description: e.target.value,
+                  category: e.target.value as 'english' | 'russian' | 'other',
                 }))
               }
-              placeholder="Guruh haqida qisqacha ma'lumot"
-              rows={3}
               style={{
                 width: '100%',
                 padding: '8px 12px',
                 border: '1px solid #e2e8f0',
                 borderRadius: '6px',
                 fontSize: '14px',
-                resize: 'vertical',
               }}
-            />
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              Jadval *
-            </label>
-            <Input
-              value={newGroup.schedule}
-              onChange={(e) =>
-                setNewGroup((prev) => ({
-                  ...prev,
-                  schedule: e.target.value,
-                }))
-              }
-              placeholder='Masalan: Dushanba-Chorshanba 09:00-11:00'
               required
-            />
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
             >
-              Xona *
-            </label>
-            <Input
-              value={newGroup.room}
-              onChange={(e) =>
-                setNewGroup((prev) => ({ ...prev, room: e.target.value }))
-              }
-              placeholder='Masalan: 201'
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              O&apos;quvchilar soni
-            </label>
-            <Input
-              type='number'
-              min='0'
-              value={newGroup.students}
-              onChange={(e) =>
-                setNewGroup((prev) => ({
-                  ...prev,
-                  students: parseInt(e.target.value) || 0,
-                }))
-              }
-              placeholder='0'
-            />
+              <option value='english'>Ingliz tili</option>
+              <option value='russian'>Rus tili</option>
+              <option value='other'>Boshqa</option>
+            </select>
           </div>
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
@@ -231,7 +235,7 @@ export function GroupModal({
                 border: 'none',
               }}
             >
-              Guruh qo&apos;shish
+              Qo'shish
             </Button>
           </div>
         </form>

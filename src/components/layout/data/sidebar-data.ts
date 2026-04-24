@@ -1,6 +1,7 @@
 import {
   AudioWaveform,
   Bell,
+  Book,
   GalleryVerticalEnd,
   GraduationCap,
   LayoutDashboard,
@@ -53,6 +54,11 @@ export const sidebarData: SidebarData = {
           title: 'Ustozlar',
           url: '/teachers',
           icon: GraduationCap,
+        },
+        {
+          title: 'Kurslar',
+          url: '/courses',
+          icon: Book,
         },
         {
           title: 'Xabarlar',
