@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { BookOpen, Plus, Filter, Download } from 'lucide-react'
 import { AssignTaskModal } from '@/components/teacher/modals/AssignTaskModal'
-import { CreateAssignmentModal } from '@/components/teacher/modals/CreateAssignmentModal'
+import { GroupDetailsModal } from '@/components/teacher/modals/GroupDetailsModal'
 
 export const Route = createFileRoute(
   '/_authenticated/teacher-dashboard/homework'
@@ -11,8 +11,8 @@ export const Route = createFileRoute(
 })
 
 function HomeworkPage() {
-  const [createOpen, setCreateOpen] = useState(false)
-  const [assignOpen, setAssignOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [groupDetailsOpen, setGroupDetailsOpen] = useState(false)
 
   return (
     <div>
@@ -23,25 +23,20 @@ function HomeworkPage() {
             Create and manage homework assignments
           </p>
         </div>
-        <div className='flex items-center gap-3'>
-          <button
-            onClick={() => setAssignOpen(true)}
-            className='flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50'
-          >
-            Assign Task
-          </button>
-          <button
-            onClick={() => setCreateOpen(true)}
-            className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b80035] to-[#e11d48] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl'
-          >
-            <Plus size={18} />
-            Create Assignment
-          </button>
-        </div>
+        <button
+          onClick={() => setModalOpen(true)}
+          className='flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#b80035] to-[#e11d48] px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl'
+        >
+          <Plus size={18} />
+          Yangi vazifa
+        </button>
       </div>
 
-      <CreateAssignmentModal open={createOpen} onOpenChange={setCreateOpen} />
-      <AssignTaskModal open={assignOpen} onOpenChange={setAssignOpen} />
+      <AssignTaskModal open={modalOpen} onOpenChange={setModalOpen} />
+      <GroupDetailsModal
+        open={groupDetailsOpen}
+        onOpenChange={setGroupDetailsOpen}
+      />
 
       {/* Filters */}
       <div className='mb-6 flex items-center gap-4'>
@@ -50,17 +45,17 @@ function HomeworkPage() {
           Filter
         </button>
         <button className='rounded-lg bg-[#fff0f3] px-4 py-2 text-sm font-semibold text-[#b80035]'>
-          All
+          Barchasi
         </button>
         <button className='rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100'>
-          Active
+          Faol
         </button>
         <button className='rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100'>
-          Completed
+          Tugatilgan
         </button>
         <button className='ml-auto flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50'>
           <Download size={16} />
-          Export
+          Eksport
         </button>
       </div>
 
@@ -69,32 +64,32 @@ function HomeworkPage() {
         {[
           {
             title: 'Unit 5 Quiz',
-            group: 'Spanish Group A',
-            due: 'Apr 22, 2026',
+            group: 'IELTS 7.5 Morning',
+            due: '22-Aprel, 2026',
             submitted: 22,
             total: 25,
             status: 'active',
           },
           {
             title: 'Essay Writing',
-            group: 'Spanish Group B',
-            due: 'Apr 25, 2026',
+            group: 'General English B2',
+            due: '25-Aprel, 2026',
             submitted: 15,
             total: 22,
             status: 'active',
           },
           {
             title: 'Vocabulary Exercise',
-            group: 'Spanish Group C',
-            due: 'Apr 18, 2026',
+            group: 'Kids Starter',
+            due: '18-Aprel, 2026',
             submitted: 18,
             total: 18,
             status: 'completed',
           },
           {
             title: 'Grammar Practice',
-            group: 'French Group A',
-            due: 'Apr 23, 2026',
+            group: 'IELTS Intensive',
+            due: '23-Aprel, 2026',
             submitted: 8,
             total: 20,
             status: 'active',
@@ -115,15 +110,15 @@ function HomeworkPage() {
                     : 'bg-gray-100 text-gray-700'
                 }`}
               >
-                {hw.status.charAt(0).toUpperCase() + hw.status.slice(1)}
+                {hw.status === 'active' ? 'Faol' : 'Tugatilgan'}
               </span>
             </div>
             <h3 className='text-lg font-bold text-gray-800'>{hw.title}</h3>
             <p className='text-sm text-gray-500'>{hw.group}</p>
             <div className='mt-4 flex items-center justify-between text-sm text-gray-600'>
-              <span>Due: {hw.due}</span>
+              <span>Muddat: {hw.due}</span>
               <span>
-                {hw.submitted}/{hw.total} submitted
+                {hw.submitted}/{hw.total} topshirildi
               </span>
             </div>
             <div className='mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-200'>
@@ -132,8 +127,11 @@ function HomeworkPage() {
                 style={{ width: `${(hw.submitted / hw.total) * 100}%` }}
               />
             </div>
-            <button className='mt-4 w-full rounded-lg border border-[#b80035] py-2 text-sm font-semibold text-[#b80035] transition-colors hover:bg-[#fff0f3]'>
-              View Details
+            <button
+              className='mt-4 w-full rounded-lg border border-[#b80035] py-2 text-sm font-semibold text-[#b80035] transition-colors hover:bg-[#fff0f3]'
+              onClick={() => setGroupDetailsOpen(true)}
+            >
+              Batafsil
             </button>
           </div>
         ))}
