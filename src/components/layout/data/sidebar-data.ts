@@ -6,12 +6,14 @@ import {
   GraduationCap,
   LayoutDashboard,
   ListTodo,
+  Megaphone,
   MessagesSquare,
-  UserCog,
-  Wrench,
+  Settings,
 } from 'lucide-react'
 import { CustomLogo } from '@/assets/custom-logo'
 import { type SidebarData } from '../types'
+
+export const adminProfileStorageKey = 'linguapro_admin_profile'
 
 export const sidebarData: SidebarData = {
   user: {
@@ -72,18 +74,18 @@ export const sidebarData: SidebarData = {
       title: 'Sozlamalar',
       items: [
         {
-          title: 'Profil',
-          url: '/settings/profile',
-          icon: UserCog,
+          title: 'Sozlamalar',
+          url: '/settings',
+          icon: Settings,
         },
         {
-          title: 'Hisob',
-          url: '/settings/account',
-          icon: Wrench,
+          title: "E'lonlar",
+          url: '/announcements',
+          icon: Megaphone,
         },
         {
           title: 'Bildirishlar',
-          url: '/settings/notifications',
+          url: '/notifications',
           icon: Bell,
         },
       ],

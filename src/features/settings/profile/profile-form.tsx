@@ -1,9 +1,8 @@
+import { useEffect } from 'react'
 import { z } from 'zod'
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@tanstack/react-router'
 import { showSubmittedData } from '@/lib/show-submitted-data'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -22,70 +21,91 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+import {
+  adminProfileStorageKey,
+  sidebarData,
+} from '@/components/layout/data/sidebar-data'
 
 const profileFormSchema = z.object({
-  username: z
-    .string('Please enter your username.')
-    .min(2, 'Username must be at least 2 characters.')
-    .max(30, 'Username must not be longer than 30 characters.'),
+  name: z
+    .string('Please enter your name.')
+    .min(2, 'Name must be at least 2 characters.')
+    .max(50, 'Name must not be longer than 50 characters.'),
   email: z.email({
-    error: (iss) =>
-      iss.input === undefined
-        ? 'Please select an email to display.'
-        : undefined,
+    error: (iss: { input?: unknown }) =>
+      iss.input === undefined ? 'Please enter an email.' : undefined,
   }),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.url('Please enter a valid URL.'),
-      })
-    )
-    .optional(),
+  avatar: z.string().min(1, 'Please enter an avatar url.'),
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
 
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: 'I own a computer.',
-  urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
-  ],
+const getInitialValues = (): ProfileFormValues => {
+  try {
+    const raw = localStorage.getItem(adminProfileStorageKey)
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown
+      if (
+        typeof parsed === 'object' &&
+        parsed !== null &&
+        'name' in parsed &&
+        'email' in parsed &&
+        'avatar' in parsed
+      ) {
+        const u = parsed as { name: unknown; email: unknown; avatar: unknown }
+        if (
+          typeof u.name === 'string' &&
+          typeof u.email === 'string' &&
+          typeof u.avatar === 'string'
+        ) {
+          return { name: u.name, email: u.email, avatar: u.avatar }
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return {
+    name: sidebarData.user.name,
+    email: sidebarData.user.email,
+    avatar: sidebarData.user.avatar,
+  }
 }
 
 export function ProfileForm() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues,
+    defaultValues: getInitialValues(),
     mode: 'onChange',
   })
 
-  const { fields, append } = useFieldArray({
-    name: 'urls',
-    control: form.control,
-  })
+  useEffect(() => {
+    form.reset(getInitialValues())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
+        onSubmit={form.handleSubmit((data) => {
+          localStorage.setItem(adminProfileStorageKey, JSON.stringify(data))
+          showSubmittedData(data)
+          window.location.reload()
+        })}
         className='space-y-8'
       >
         <FormField
           control={form.control}
-          name='username'
+          name='name'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder='shadcn' {...field} />
+                <Input placeholder='Admin name' {...field} />
               </FormControl>
               <FormDescription>
-                This is your public display name. It can be your real name or a
-                pseudonym. You can only change this once every 30 days.
+                This will be shown in the sidebar.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -100,76 +120,45 @@ export function ProfileForm() {
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder='Select a verified email to display' />
+                    <SelectValue placeholder='Select an email to display' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value='m@example.com'>m@example.com</SelectItem>
-                  <SelectItem value='m@google.com'>m@google.com</SelectItem>
-                  <SelectItem value='m@support.com'>m@support.com</SelectItem>
+                  <SelectItem value='admin@linguapro.uz'>
+                    admin@linguapro.uz
+                  </SelectItem>
+                  <SelectItem value='support@linguapro.uz'>
+                    support@linguapro.uz
+                  </SelectItem>
+                  <SelectItem value='info@linguapro.uz'>
+                    info@linguapro.uz
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>
-                You can manage verified email addresses in your{' '}
-                <Link to='/'>email settings</Link>.
+                This will be shown in the sidebar.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
-          name='bio'
+          name='avatar'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bio</FormLabel>
+              <FormLabel>Avatar URL</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder='Tell us a little bit about yourself'
-                  className='resize-none'
-                  {...field}
-                />
+                <Input placeholder='/avatars/shadcn.jpg' {...field} />
               </FormControl>
               <FormDescription>
-                You can <span>@mention</span> other users and organizations to
-                link to them.
+                You can use an URL or a local path.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div>
-          {fields.map((field, index) => (
-            <FormField
-              control={form.control}
-              key={field.id}
-              name={`urls.${index}.value`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                    URLs
-                  </FormLabel>
-                  <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                    Add links to your website, blog, or social media profiles.
-                  </FormDescription>
-                  <FormControl className={cn(index !== 0 && 'mt-1.5')}>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            className='mt-2'
-            onClick={() => append({ value: '' })}
-          >
-            Add URL
-          </Button>
-        </div>
         <Button type='submit'>Update profile</Button>
       </form>
     </Form>
