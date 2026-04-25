@@ -147,7 +147,7 @@ export function GroupDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='flex h-[90vh] max-h-[calc(100vh-32px)] w-[1100px] max-w-[calc(100vw-32px)] flex-col gap-0 overflow-hidden rounded-[28px] border-0 bg-white p-0 shadow-[0_32px_80px_-20px_rgba(2,6,23,0.3)] md:h-[700px] md:flex-row'>
+      <DialogContent className='flex h-[90vh] max-h-[calc(100vh-32px)] w-[95vw] !max-w-[1100px] flex-col gap-0 overflow-hidden rounded-[28px] border-0 bg-white p-0 shadow-[0_32px_80px_-20px_rgba(2,6,23,0.3)] md:h-[700px] md:flex-row [&>button.absolute]:hidden'>
         {/* ── Left Panel ── */}
         <div className='flex w-full flex-shrink-0 flex-col gap-5 overflow-y-auto border-b border-slate-200 bg-slate-50 px-6 py-6 md:w-[320px] md:border-r md:border-b-0 md:px-7 md:py-8'>
           <div>
@@ -189,7 +189,6 @@ export function GroupDetailsModal({
             </div>
           </div>
         </div>
-
         {/* ── Right Panel ── */}
         <div className='flex h-full flex-1 flex-col overflow-hidden px-6 py-6 md:px-8 md:py-8'>
           {/* Header */}
@@ -251,7 +250,7 @@ export function GroupDetailsModal({
               type='button'
               onClick={handleClose}
               className='h-12 w-full rounded-full text-sm font-extrabold sm:w-auto sm:flex-1'
-              gradient
+              roseVariant='gradient'
             >
               Darsni Boshlash
             </RoseButton>
