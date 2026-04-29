@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Calendar, Check, ChevronDown, Loader2, Search } from 'lucide-react'
+import { toast } from 'sonner'
+import type { AttendanceStatus } from '@/api/service/teacher/attendance.type'
+import { useAttendanceList } from '@/hooks/teacher/attendance/useAttendanceList'
+import { useAttendanceStats } from '@/hooks/teacher/attendance/useAttendanceStats'
+import { useCreateAttendance } from '@/hooks/teacher/attendance/useCreateAttendance'
+import { useUpdateAttendance } from '@/hooks/teacher/attendance/useUpdateAttendance'
 import { Calendar as CalendarPicker } from '@/components/ui/calendar'
 import {
   Popover,
@@ -15,56 +22,30 @@ export const Route = createFileRoute(
   component: AttendancePage,
 })
 
-type AttendanceStatus = 'present' | 'absent' | 'excused'
-
 type AttendanceStudent = {
-  id: string
+  attendanceId?: number
+  studentId: number
   name: string
   status: AttendanceStatus
   note: string
 }
 
-type Group = {
-  id: string
+type GroupOption = {
+  id: number
   name: string
   students: number
 }
 
-const groups: Group[] = [
-  { id: '1', name: 'Spanish Group A', students: 25 },
-  { id: '2', name: 'Spanish Group B', students: 22 },
-  { id: '3', name: 'French Group A', students: 20 },
-]
-
-const initialStudents: AttendanceStudent[] = [
-  { id: '01', name: 'Abduraxmonov Ibrohim', status: 'present', note: '' },
-  {
-    id: '02',
-    name: 'Tursunova Malika',
-    status: 'absent',
-    note: 'Shaxsiy sabablar',
-  },
-  {
-    id: '03',
-    name: 'Karimov Sardor',
-    status: 'excused',
-    note: "Shifokor ko'rigi",
-  },
-  { id: '04', name: 'Azimova Sevinch', status: 'present', note: '' },
-]
-
 function formatDate(value: Date) {
   const mm = String(value.getMonth() + 1).padStart(2, '0')
   const dd = String(value.getDate()).padStart(2, '0')
-  const yyyy = value.getFullYear()
-  return `${mm}/${dd}/${yyyy}`
+  return `${mm}/${dd}/${value.getFullYear()}`
 }
 
 function toISODate(value: Date) {
-  const yyyy = value.getFullYear()
   const mm = String(value.getMonth() + 1).padStart(2, '0')
   const dd = String(value.getDate()).padStart(2, '0')
-  return `${yyyy}-${mm}-${dd}`
+  return `${value.getFullYear()}-${mm}-${dd}`
 }
 
 function getInitials(name: string) {
@@ -76,425 +57,349 @@ function getInitials(name: string) {
     .toUpperCase()
 }
 
-function computeStats(list: AttendanceStudent[]) {
-  const total = list.length
-  const present = list.filter((s) => s.status === 'present').length
-  const absent = list.filter((s) => s.status === 'absent').length
-  const excused = list.filter((s) => s.status === 'excused').length
-  const overall = total === 0 ? 0 : Math.round((present / total) * 100)
-  return { total, present, absent, excused, overall }
-}
-
 function AttendancePage() {
-  const [selectedGroupId, setSelectedGroupId] = useState(groups[0].id)
+  const [selectedGroupId, setSelectedGroupId] = useState<number>(0)
   const [groupOpen, setGroupOpen] = useState(false)
-  const selectedGroup = useMemo(
-    () => groups.find((g) => g.id === selectedGroupId) ?? groups[0],
-    [selectedGroupId]
-  )
-
+  const [date, setDate] = useState<Date>(() => new Date())
+  const [searchQuery, setSearchQuery] = useState('')
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>(
     'idle'
   )
-  const [date, setDate] = useState<Date>(() => new Date())
-  const [students, setStudents] = useState<AttendanceStudent[]>(initialStudents)
-  const [searchQuery, setSearchQuery] = useState('')
 
-  // Stats faqat "Davomatni saqlash" bosilganda yangilanadi
-  const [stats, setStats] = useState(() => computeStats(initialStudents))
+  const isoDate = useMemo(() => toISODate(date), [date])
+  const attendanceListQuery = useAttendanceList()
+  const createAttendanceMutation = useCreateAttendance()
+  const updateAttendanceMutation = useUpdateAttendance()
+
+  const groups = useMemo<GroupOption[]>(() => {
+    const list = attendanceListQuery.data ?? []
+    const map = new Map<
+      number,
+      { id: number; name: string; students: Set<number> }
+    >()
+    for (const item of list) {
+      const existing = map.get(item.group)
+      if (existing) existing.students.add(item.student)
+      else
+        map.set(item.group, {
+          id: item.group,
+          name: item.group_name,
+          students: new Set([item.student]),
+        })
+    }
+    return Array.from(map.values()).map((g) => ({
+      id: g.id,
+      name: g.name,
+      students: g.students.size,
+    }))
+  }, [attendanceListQuery.data])
+
+  const groupId = selectedGroupId || groups[0]?.id || 0
+  const selectedGroupName =
+    groups.find((g) => g.id === groupId)?.name ?? 'Select group'
+
+  const statsQuery = useAttendanceStats(groupId)
+  const stats = statsQuery.data
+
+  const [students, setStudents] = useState<AttendanceStudent[]>([])
+
+  useMemo(() => {
+    const list = attendanceListQuery.data ?? []
+    setStudents(
+      list
+        .filter((item) => item.group === groupId && item.date === isoDate)
+        .map((item) => ({
+          attendanceId: item.id,
+          studentId: item.student,
+          name: item.student_name,
+          status: item.status,
+          note: item.note,
+        }))
+    )
+  }, [attendanceListQuery.data, groupId, isoDate])
 
   const filteredStudents = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
-    if (!q) return students
-    return students.filter((s) => s.name.toLowerCase().includes(q))
+    return q
+      ? students.filter((s) => s.name.toLowerCase().includes(q))
+      : students
   }, [searchQuery, students])
 
-  const setStudentStatus = (id: string, status: AttendanceStatus) =>
-    setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+  const setStudentStatus = (studentId: number, status: AttendanceStatus) =>
+    setStudents((prev) =>
+      prev.map((s) => (s.studentId === studentId ? { ...s, status } : s))
+    )
 
-  const setStudentNote = (id: string, note: string) =>
-    setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, note } : s)))
+  const setStudentNote = (studentId: number, note: string) =>
+    setStudents((prev) =>
+      prev.map((s) => (s.studentId === studentId ? { ...s, note } : s))
+    )
 
-  const handleSave = () => {
-    if (saveState === 'saving') return
+  const queryClient = useQueryClient()
+
+  const handleSave = async () => {
+    if (saveState === 'saving' || !groupId) return
     setSaveState('saving')
-    window.setTimeout(() => {
-      setStats(computeStats(students))
-      setSaveState('saved')
-      window.setTimeout(() => setSaveState('idle'), 1300)
-    }, 700)
+    await toast.promise(
+      Promise.all(
+        students.map((s) => {
+          const data = {
+            student: s.studentId,
+            group: groupId,
+            date: isoDate,
+            status: s.status,
+            note: s.note || undefined,
+          }
+          return s.attendanceId
+            ? updateAttendanceMutation.mutateAsync({ id: s.attendanceId, data })
+            : createAttendanceMutation.mutateAsync(data)
+        })
+      ),
+      { loading: 'Saving...', success: 'Saved', error: 'Error' }
+    )
+    await queryClient.invalidateQueries({
+      queryKey: ['attendance', 'stats', groupId],
+    })
+    setSaveState('saved')
+    window.setTimeout(() => setSaveState('idle'), 1300)
   }
 
-  // Circular chart
-  const radius = 54
-  const stroke = 12
+  // Circular Stats Logic
+  const overall = stats?.present_pct ?? 0
+  const radius = 45
+  const stroke = 9
   const circumference = 2 * Math.PI * radius
   const offset =
-    circumference -
-    (Math.max(0, Math.min(100, stats.overall)) / 100) * circumference
+    circumference - (Math.max(0, Math.min(100, overall)) / 100) * circumference
 
   return (
-    <div className='space-y-5 p-6'>
-      {/* Header */}
-      <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+    <div className='mx-auto max-w-7xl space-y-4 p-4 text-slate-900'>
+      {/* Top Bar */}
+      <div className='flex flex-wrap items-center justify-between gap-4'>
         <div>
-          <h1 className='text-2xl font-extrabold text-slate-900'>
-            Attendance Management
-          </h1>
-          <p className='mt-0.5 text-sm text-slate-500'>
-            Monitor student attendance by groups
+          <h1 className='text-2xl font-bold'>Attendance</h1>
+          <p className='text-sm text-slate-500'>
+            Manage student presence and notes
           </p>
         </div>
-
-        <div className='relative w-full md:w-72'>
+        <div className='relative w-full sm:w-64'>
           <Search
-            className='absolute top-1/2 left-3.5 -translate-y-1/2 text-slate-400'
+            className='absolute top-1/2 left-3 -translate-y-1/2 text-slate-400'
             size={16}
           />
           <input
             type='text'
+            placeholder='Search student...'
+            className='h-10 w-full rounded-lg border-none bg-slate-100 pr-4 pl-9 text-base transition-all focus:ring-1 focus:ring-rose-500'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder='Search...'
-            className='h-10 w-full rounded-xl border border-slate-200 bg-white pr-4 pl-10 text-sm text-slate-800 transition outline-none placeholder:text-slate-400 focus:border-rose-300 focus:ring-2 focus:ring-rose-500/20'
           />
         </div>
       </div>
 
-      {/* Top cards */}
-      <div className='grid grid-cols-1 gap-4 lg:grid-cols-[1fr_300px]'>
-        {/* Stats card */}
-        <div className='rounded-2xl border border-slate-100 bg-white p-7 shadow-sm'>
-          <div className='flex items-center gap-10'>
-            {/* Donut chart — p-2 qo'shimcha padding */}
-            <div className='relative flex-shrink-0 p-2'>
-              <svg
-                width='148'
-                height='148'
-                viewBox='0 0 148 148'
-                className='-rotate-90'
-              >
-                <circle
-                  cx='74'
-                  cy='74'
-                  r={radius}
-                  fill='none'
-                  stroke='rgb(255 228 230)'
-                  strokeWidth={stroke}
-                />
-                <circle
-                  cx='74'
-                  cy='74'
-                  r={radius}
-                  fill='none'
-                  stroke='rgb(225 29 72)'
-                  strokeWidth={stroke}
-                  strokeLinecap='round'
-                  strokeDasharray={circumference}
-                  strokeDashoffset={offset}
-                  className='transition-all duration-500'
-                />
-              </svg>
-              <div className='absolute inset-0 flex flex-col items-center justify-center'>
-                <span className='text-3xl font-black text-slate-900'>
-                  {stats.overall}%
-                </span>
-                <span className='text-[10px] font-bold tracking-widest text-slate-400'>
-                  OVERALL
-                </span>
-              </div>
-            </div>
-
-            {/* Stat numbers */}
-            <div className='grid flex-1 grid-cols-2 gap-x-10 gap-y-6'>
-              {[
-                {
-                  label: 'PRESENT TODAY',
-                  value: stats.present,
-                  color: 'text-emerald-600',
-                },
-                {
-                  label: 'ABSENT TODAY',
-                  value: stats.absent,
-                  color: 'text-rose-600',
-                },
-                {
-                  label: 'EXCUSED',
-                  value: stats.excused,
-                  color: 'text-slate-700',
-                },
-                {
-                  label: 'TOTAL GROUPS',
-                  value: groups.length,
-                  color: 'text-slate-700',
-                },
-              ].map((item) => (
-                <div key={item.label}>
-                  <p className='text-[10px] leading-tight font-bold tracking-wider text-slate-400'>
-                    {item.label}
-                  </p>
-                  <p className={`mt-1 text-3xl font-black ${item.color}`}>
-                    {item.value}
-                  </p>
-                </div>
-              ))}
+      {/* Quick Stats Panel */}
+      <div className='grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-12'>
+        <div className='flex items-center justify-center border-r border-slate-100 pr-4 md:col-span-3'>
+          <div className='relative flex items-center justify-center'>
+            <svg width='110' height='110' className='-rotate-90'>
+              <circle
+                cx='55'
+                cy='55'
+                r={radius}
+                fill='none'
+                stroke='#f1f5f9'
+                strokeWidth={stroke}
+              />
+              <circle
+                cx='55'
+                cy='55'
+                r={radius}
+                fill='none'
+                stroke='#e11d48'
+                strokeWidth={stroke}
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                strokeLinecap='round'
+                className='transition-all duration-700 ease-out'
+              />
+            </svg>
+            <div className='absolute flex flex-col items-center'>
+              <span className='text-2xl font-bold'>{overall}%</span>
+              <span className='text-xs font-bold tracking-tighter text-slate-400 uppercase'>
+                Present
+              </span>
             </div>
           </div>
         </div>
 
-        {/* AI Insight card */}
-        <div className='rounded-2xl bg-gradient-to-br from-rose-600 to-rose-800 p-5 text-white shadow-sm'>
-          <span className='inline-block rounded-full bg-white/20 px-3 py-0.5 text-[10px] font-bold tracking-widest'>
-            AI INSIGHT
-          </span>
-          <h3 className='mt-3 text-xl leading-snug font-black'>
-            Attendance drops significantly on Mondays.
-          </h3>
-          <p className='mt-2 text-sm leading-relaxed text-white/80'>
-            Analysis of the last 4 weeks shows that in the IELTS 7.5 group, 15%
-            more classes are missed on Mondays.
-          </p>
-          <button
-            type='button'
-            className='mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-rose-700 transition hover:bg-rose-50'
-          >
-            View Report →
-          </button>
+        <div className='grid grid-cols-2 items-center gap-4 pl-2 md:col-span-9 lg:grid-cols-4'>
+          {[
+            {
+              label: 'Present',
+              val: stats?.present,
+              color: 'text-emerald-600',
+            },
+            { label: 'Absent', val: stats?.absent, color: 'text-rose-600' },
+            { label: 'Late', val: stats?.late, color: 'text-amber-600' },
+            { label: 'Total', val: stats?.total, color: 'text-slate-600' },
+          ].map((s) => (
+            <div key={s.label}>
+              <p className='text-xs font-bold tracking-widest text-slate-400 uppercase'>
+                {s.label}
+              </p>
+              <p className={`text-3xl font-bold ${s.color}`}>{s.val ?? 0}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Filters + Save */}
-      <div className='rounded-2xl border border-slate-100 bg-white p-4 shadow-sm'>
-        <div className='flex flex-col gap-3 md:flex-row md:items-end md:gap-4'>
-          {/* Group select — custom dropdown */}
-          <div className='flex-1'>
-            <label className='mb-1.5 block text-[11px] font-bold tracking-widest text-slate-400'>
-              SELECT GROUP
-            </label>
-            <div className='relative'>
-              <button
-                type='button'
-                onClick={() => setGroupOpen((v) => !v)}
-                className='flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 transition hover:border-slate-300 focus:ring-2 focus:ring-rose-500/20 focus:outline-none'
-              >
-                <span>{selectedGroup.name}</span>
-                <ChevronDown
-                  size={16}
-                  className={`text-slate-400 transition-transform duration-200 ${
-                    groupOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-              {groupOpen && (
-                <div className='absolute top-[calc(100%+4px)] right-0 left-0 z-50 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg'>
-                  {groups.map((g) => (
-                    <button
-                      key={g.id}
-                      type='button'
-                      onClick={() => {
-                        setSelectedGroupId(g.id)
-                        setGroupOpen(false)
-                      }}
-                      className={`flex w-full items-center justify-between px-4 py-2.5 text-sm font-semibold transition hover:bg-slate-50 ${
-                        g.id === selectedGroupId
-                          ? 'text-rose-600'
-                          : 'text-slate-700'
-                      }`}
-                    >
-                      <span>{g.name}</span>
-                      <span className='text-xs text-slate-400'>
-                        {g.students} students
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Date picker */}
-          <div className='flex-1'>
-            <label className='mb-1.5 block text-[11px] font-bold tracking-widest text-slate-400'>
-              DATE
-            </label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type='button'
-                  className='flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 transition hover:border-slate-300 focus:ring-2 focus:ring-rose-500/20 focus:outline-none'
-                >
-                  <span className='flex items-center gap-2'>
-                    <Calendar size={15} className='text-slate-400' />
-                    {formatDate(date)}
-                  </span>
-                  <ChevronDown size={16} className='text-slate-400' />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className='w-auto p-0' align='start'>
-                <CalendarPicker
-                  mode='single'
-                  selected={date}
-                  onSelect={(next) => {
-                    if (next) setDate(next)
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Save button */}
-          <RoseButton
-            onClick={handleSave}
-            roseVariant='solid'
-            className='h-10 rounded-xl px-6 whitespace-nowrap'
-          >
-            {saveState === 'saving' ? (
-              <span className='flex items-center gap-2'>
-                <Loader2 size={15} className='animate-spin' />
-                Saving...
-              </span>
-            ) : saveState === 'saved' ? (
-              <span className='flex items-center gap-2'>
-                <Check size={15} />
-                Saved
-              </span>
-            ) : (
-              'Save Attendance'
-            )}
-          </RoseButton>
-        </div>
-      </div>
-
-      {/* Students table */}
-      <div className='overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm'>
-        <div className='flex items-center justify-between border-b border-slate-100 px-5 py-4'>
-          <div>
-            <h2 className='text-base font-extrabold text-slate-900'>
-              Student List
-            </h2>
-            <p className='mt-0.5 text-sm text-slate-500'>
-              Total: {stats.total} students • {selectedGroup.name}
-            </p>
-          </div>
-          <span className='hidden items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 md:flex'>
-            <span className='h-1.5 w-1.5 rounded-full bg-emerald-500' />
-            All present
-          </span>
-        </div>
-
-        <div className='overflow-x-auto'>
-          <table className='w-full min-w-[780px]'>
-            <thead>
-              <tr className='border-b border-slate-100 bg-slate-50'>
-                {['#', 'STUDENT NAME', 'ATTENDANCE', 'NOTE'].map((h) => (
-                  <th
-                    key={h}
-                    className='px-5 py-3 text-left text-[10px] font-bold tracking-widest text-slate-400'
+      {/* Control Panel */}
+      <div className='flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3'>
+        <div className='min-w-[200px] flex-1'>
+          <label className='mb-1 block text-xs font-bold text-slate-400 uppercase'>
+            Group
+          </label>
+          <div className='relative'>
+            <button
+              onClick={() => setGroupOpen(!groupOpen)}
+              className='flex h-10 w-full items-center justify-between rounded-lg border border-slate-200 px-3 text-base transition-colors hover:bg-slate-50'
+            >
+              <span className='truncate'>{selectedGroupName}</span>
+              <ChevronDown
+                size={16}
+                className={`transition-transform ${groupOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {groupOpen && (
+              <div className='absolute top-full left-0 z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-xl'>
+                {groups.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => {
+                      setSelectedGroupId(g.id)
+                      setGroupOpen(false)
+                    }}
+                    className='flex w-full justify-between px-3 py-2 text-left text-base hover:bg-slate-50'
                   >
-                    {h}
-                  </th>
+                    <span>{g.name}</span>
+                    <span className='text-sm text-slate-400'>{g.students}</span>
+                  </button>
                 ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className='min-w-[200px] flex-1'>
+          <label className='mb-1 block text-xs font-bold text-slate-400 uppercase'>
+            Session Date
+          </label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className='flex h-10 w-full items-center justify-between rounded-lg border border-slate-200 px-3 text-base hover:bg-slate-50'>
+                <span className='flex items-center gap-2'>
+                  <Calendar size={16} /> {formatDate(date)}
+                </span>
+                <ChevronDown size={16} />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className='w-auto p-0'>
+              <CalendarPicker
+                mode='single'
+                selected={date}
+                onSelect={(d) => d && setDate(d)}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <RoseButton
+          onClick={handleSave}
+          roseVariant='solid'
+          className='h-10 px-6 text-base font-medium'
+        >
+          {saveState === 'saving' ? (
+            <Loader2 size={18} className='animate-spin' />
+          ) : saveState === 'saved' ? (
+            <Check size={18} />
+          ) : (
+            'Update List'
+          )}
+        </RoseButton>
+      </div>
+
+      {/* Table Section */}
+      <div className='overflow-hidden rounded-xl border border-slate-200 bg-white'>
+        <div className='overflow-x-auto'>
+          <table className='w-full border-collapse text-left text-sm'>
+            <thead className='border-b border-slate-200 bg-slate-50'>
+              <tr>
+                <th className='w-12 px-4 py-3 text-xs font-bold text-slate-500 uppercase'>
+                  #
+                </th>
+                <th className='px-4 py-3 text-xs font-bold text-slate-500 uppercase'>
+                  Student Name
+                </th>
+                <th className='px-4 py-3 text-xs font-bold text-slate-500 uppercase'>
+                  Attendance
+                </th>
+                <th className='px-4 py-3 text-xs font-bold text-slate-500 uppercase'>
+                  Note
+                </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className='divide-y divide-slate-100'>
               {filteredStudents.map((s, idx) => (
                 <tr
-                  key={s.id}
-                  className={`border-b border-slate-50 transition hover:bg-slate-50/60 ${
-                    idx === filteredStudents.length - 1 ? 'border-b-0' : ''
-                  }`}
+                  key={s.studentId}
+                  className='transition-colors hover:bg-slate-50/50'
                 >
-                  <td className='w-12 px-5 py-3.5 text-sm font-bold text-slate-400'>
-                    {s.id}
+                  <td className='px-4 py-3 font-medium text-slate-400'>
+                    {idx + 1}
                   </td>
-
-                  <td className='px-5 py-3.5'>
+                  <td className='px-4 py-3'>
                     <div className='flex items-center gap-3'>
-                      <div className='flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-600'>
+                      <div className='flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-xs font-bold text-rose-700'>
                         {getInitials(s.name)}
                       </div>
-                      <div>
-                        <p className='text-sm font-bold text-slate-900'>
-                          {s.name}
-                        </p>
-                        <p className='text-xs text-slate-400'>
-                          ID: LP-{toISODate(date).replace(/-/g, '')}-{s.id}
-                        </p>
-                      </div>
+                      <span className='text-base font-semibold text-slate-800'>
+                        {s.name}
+                      </span>
                     </div>
                   </td>
-
-                  <td className='px-5 py-3.5'>
-                    <div className='flex items-center gap-2'>
-                      <button
-                        type='button'
-                        onClick={() => setStudentStatus(s.id, 'present')}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                          s.status === 'present'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                        }`}
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full ${
-                            s.status === 'present'
-                              ? 'bg-emerald-500'
-                              : 'bg-slate-300'
+                  <td className='px-4 py-3'>
+                    <div className='flex gap-1'>
+                      {(
+                        ['present', 'absent', 'late'] as AttendanceStatus[]
+                      ).map((st) => (
+                        <button
+                          key={st}
+                          onClick={() => setStudentStatus(s.studentId, st)}
+                          className={`rounded px-3 py-1.5 text-xs font-bold uppercase transition-all ${
+                            s.status === st
+                              ? st === 'present'
+                                ? 'bg-emerald-500 text-white'
+                                : st === 'absent'
+                                  ? 'bg-rose-500 text-white'
+                                  : 'bg-slate-800 text-white'
+                              : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
                           }`}
-                        />
-                        PRESENT
-                      </button>
-
-                      <button
-                        type='button'
-                        onClick={() => setStudentStatus(s.id, 'absent')}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                          s.status === 'absent'
-                            ? 'bg-rose-50 text-rose-700'
-                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                        }`}
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full ${
-                            s.status === 'absent'
-                              ? 'bg-rose-500'
-                              : 'bg-slate-300'
-                          }`}
-                        />
-                        ABSENT
-                      </button>
-
-                      <button
-                        type='button'
-                        onClick={() => setStudentStatus(s.id, 'excused')}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                          s.status === 'excused'
-                            ? 'bg-slate-800 text-white'
-                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
-                        }`}
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full ${
-                            s.status === 'excused' ? 'bg-white' : 'bg-slate-300'
-                          }`}
-                        />
-                        EXCUSED
-                      </button>
+                        >
+                          {st}
+                        </button>
+                      ))}
                     </div>
                   </td>
-
-                  <td className='px-5 py-3.5'>
+                  <td className='px-4 py-3'>
                     <input
+                      type='text'
                       value={s.note}
-                      onChange={(e) => setStudentNote(s.id, e.target.value)}
                       placeholder='Add note...'
-                      disabled={s.status !== 'excused'}
-                      className={`h-9 w-full rounded-lg px-3 text-sm transition outline-none ${
-                        s.status !== 'excused'
-                          ? 'cursor-not-allowed bg-slate-50 text-slate-300 placeholder:text-slate-300'
-                          : 'bg-slate-100 text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-rose-500/20'
-                      }`}
+                      onChange={(e) =>
+                        setStudentNote(s.studentId, e.target.value)
+                      }
+                      disabled={s.status !== 'late'}
+                      className='h-9 w-full rounded-lg border border-slate-200 bg-slate-50 px-2 text-sm outline-none focus:ring-1 focus:ring-rose-500 disabled:opacity-30'
                     />
                   </td>
                 </tr>
