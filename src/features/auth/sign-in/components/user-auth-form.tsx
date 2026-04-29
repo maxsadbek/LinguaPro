@@ -1,12 +1,12 @@
-import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { Loader2, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAuthStore } from '@/stores/auth-store'
-import { cn, sleep } from '@/lib/utils'
+import type { AxiosError } from 'axios'
+import { cn } from '@/lib/utils'
+import { useLogin } from '@/hooks/auth/useLogin'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -42,23 +42,16 @@ const formSchema = z.object({
     ),
 })
 
-interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
-  redirectTo?: string
-}
+type FormValues = z.infer<typeof formSchema>
 
-export function UserAuthForm({
-  className,
-  redirectTo,
-  ...props
-}: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
-  const { auth } = useAuthStore()
+interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {}
 
-  const focusInputStyle =
-    'focus-visible:ring-[#C70C3D] focus-visible:ring-offset-0'
+export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
+  const loginMutation = useLogin()
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const focusInputStyle = 'focus-visible:ring-[#C70C3D] focus-visible:ring-offset-0'
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: '',
@@ -66,63 +59,12 @@ export function UserAuthForm({
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-
-    let role: 'teacher' | 'admin' | 'user' = 'user'
-    let accountNo = 'USR001'
-
-    const normalizedUsername = data.username.trim().toLowerCase()
-    const isTeacherLogin =
-      normalizedUsername === 'teacher01' && data.password === '1111111'
-
-    if (isTeacherLogin) {
-      role = 'teacher'
-      accountNo = 'TCH001'
-    } else if (normalizedUsername.includes('admin')) {
-      role = 'admin'
-      accountNo = 'ADM001'
-    }
-
-    toast.promise(sleep(2000), {
+  function onSubmit(data: FormValues) {
+    toast.promise(loginMutation.mutateAsync(data), {
       loading: 'Tizimga kirilmoqda...',
-      success: () => {
-        setIsLoading(false)
-        const mockUser = {
-          accountNo,
-          email: normalizedUsername,
-          role,
-          exp: Date.now() + 24 * 60 * 60 * 1000,
-        }
-
-        sessionStorage.setItem('linguapro_user', JSON.stringify(mockUser))
-        auth.setUser(mockUser)
-        auth.setAccessToken('mock-access-token')
-
-        let redirectPath = '/admin-dashboard'
-        if (role === 'teacher') {
-          redirectPath = '/teacher-dashboard'
-        }
-
-        const isRoleAllowedRedirect = (() => {
-          if (!redirectTo) return false
-          if (role === 'teacher')
-            return redirectTo.startsWith('/teacher-dashboard')
-          if (role === 'admin')
-            return !redirectTo.startsWith('/teacher-dashboard')
-          return false
-        })()
-
-        navigate({
-          to: isRoleAllowedRedirect ? redirectTo : redirectPath,
-          replace: true,
-        })
-        return 'Xush kelibsiz!'
-      },
-      error: () => {
-        setIsLoading(false)
-        return "Login muvaffaqiyatsiz. Qayta urinib ko'ring."
-      },
+      success: 'Xush kelibsiz!',
+      error: (err: AxiosError<{ message?: string }>) =>
+        err.response?.data?.message ?? "Login muvaffaqiyatsiz. Qayta urinib ko'ring.",
     })
   }
 
@@ -183,9 +125,9 @@ export function UserAuthForm({
 
         <Button
           className='mt-2 w-full bg-[#C70C3D] text-white transition-colors hover:bg-[#C70C3D]/90'
-          disabled={isLoading}
+          disabled={loginMutation.isPending}
         >
-          {isLoading ? (
+          {loginMutation.isPending ? (
             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
           ) : (
             <LogIn className='mr-2 h-4 w-4' />
