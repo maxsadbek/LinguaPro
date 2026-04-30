@@ -1,28 +1,175 @@
+import { Calendar as CalendarIcon } from 'lucide-react'
+import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { RoseButton } from '@/components/ui/rose-button'
+import { cn } from '@/lib/utils'
+
+// ─── types ─────────────────────────────────────────────────────────
+
+type Status = 'active' | 'inactive' | 'archived'
+
+interface NewGroup {
+  name: string
+  course: number
+  teacher: number
+  start_time: string
+  end_time: string
+  week_days: string   // "Mon,Wed,Fri"
+  status: Status
+  start_date: string  // "YYYY-MM-DD"
+  end_date: string    // "YYYY-MM-DD"
+}
 
 interface GroupModalProps {
   isOpen: boolean
   onClose: () => void
   onAddGroup: () => void
-  newGroup: {
-    name: string
-    description: string
-    schedule: string
-    room: string
-    students: number
-  }
-  setNewGroup: React.Dispatch<
-    React.SetStateAction<{
-      name: string
-      description: string
-      schedule: string
-      room: string
-      students: number
-    }>
-  >
+  newGroup: NewGroup
+  setNewGroup: React.Dispatch<React.SetStateAction<NewGroup>>
 }
+
+// ─── constants ─────────────────────────────────────────────────────
+
+const WEEK_DAYS = [
+  { label: 'Du', value: 'Mon' },
+  { label: 'Se', value: 'Tue' },
+  { label: 'Ch', value: 'Wed' },
+  { label: 'Pa', value: 'Thu' },
+  { label: 'Ju', value: 'Fri' },
+  { label: 'Sh', value: 'Sat' },
+  { label: 'Ya', value: 'Sun' },
+]
+
+// ─── helpers ───────────────────────────────────────────────────────
+
+/**
+ * "2024-10-05" → Date (timezone xatosiz)
+ */
+function parseDateSafe(value: string): Date | undefined {
+  if (!value) return undefined
+  const [y, m, d] = value.split('-').map(Number)
+  return new Date(y, m - 1, d) // local timezone, UTC offset yo'q
+}
+
+/**
+ * Date → "YYYY-MM-DD"
+ */
+function formatDateValue(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+// ─── sub-components ────────────────────────────────────────────────
+
+function FormField({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label className="text-sm font-semibold">{label}</Label>
+      {children}
+    </div>
+  )
+}
+
+function DatePicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (v: string) => void
+}) {
+  const selected = parseDateSafe(value)
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            'w-full justify-between font-normal',
+            !value && 'text-muted-foreground',
+          )}
+        >
+          {selected ? format(selected, 'dd.MM.yyyy') : 'Tanlang'}
+          <CalendarIcon size={16} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={(date) => onChange(date ? formatDateValue(date) : '')}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function WeekDayPicker({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (v: string) => void
+}) {
+  const selected = value ? value.split(',').filter(Boolean) : []
+
+  const toggle = (day: string) => {
+    const next = selected.includes(day)
+      ? selected.filter((d) => d !== day)
+      : [...selected, day]
+    // hafta tartibida saqlash
+    onChange(WEEK_DAYS.map((d) => d.value).filter((d) => next.includes(d)).join(','))
+  }
+
+  return (
+    <div className="flex gap-1.5">
+      {WEEK_DAYS.map(({ label, value: day }) => {
+        const active = selected.includes(day)
+        return (
+          <button
+            key={day}
+            type="button"
+            onClick={() => toggle(day)}
+            className={cn(
+              'flex-1 py-1.5 rounded-md text-xs font-semibold border transition-colors',
+              active
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background text-muted-foreground border-border hover:border-primary/50',
+            )}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── main ──────────────────────────────────────────────────────────
 
 export function GroupModal({
   isOpen,
@@ -33,203 +180,133 @@ export function GroupModal({
 }: GroupModalProps) {
   if (!isOpen) return null
 
+  const set = <K extends keyof NewGroup>(key: K, value: NewGroup[K]) =>
+    setNewGroup((prev) => ({ ...prev, [key]: value }))
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onAddGroup()
+  }
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: 'white',
-          borderRadius: '16px',
-          padding: '24px',
-          maxWidth: '500px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflow: 'auto',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px',
-          }}
-        >
-          <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>
-            Yangi Guruh Qo&apos;shish
-          </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-background w-[90%] max-w-[500px] max-h-[90vh] overflow-auto rounded-2xl p-6 shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-xl font-bold">Yangi Guruh Qo&apos;shish</h2>
           <button
             onClick={onClose}
-            style={{
-              backgroundColor: 'transparent',
-              border: 'none',
-              fontSize: '24px',
-              cursor: 'pointer',
-              color: '#666',
-            }}
+            className="text-muted-foreground hover:text-foreground text-2xl leading-none"
           >
             ×
           </button>
         </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            onAddGroup()
-          }}
-          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-        >
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              Guruh nomi *
-            </label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <FormField label="Guruh nomi *">
             <Input
               value={newGroup.name}
-              onChange={(e) =>
-                setNewGroup((prev) => ({ ...prev, name: e.target.value }))
-              }
-              placeholder='Masalan: IELTS 7.5 Morning'
+              onChange={(e) => set('name', e.target.value)}
+              placeholder="Masalan: IELTS 7.5 Morning"
               required
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              Tavsif
-            </label>
-            <textarea
-              value={newGroup.description}
-              onChange={(e) =>
-                setNewGroup((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              placeholder="Guruh haqida qisqacha ma'lumot"
-              rows={3}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '14px',
-                resize: 'vertical',
-              }}
-            />
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              Jadval *
-            </label>
+          <FormField label="Kurs *">
             <Input
-              value={newGroup.schedule}
-              onChange={(e) =>
-                setNewGroup((prev) => ({
-                  ...prev,
-                  schedule: e.target.value,
-                }))
-              }
-              placeholder='Masalan: Dushanba-Chorshanba 09:00-11:00'
+              type="number"
+              value={newGroup.course || ''}
+              onChange={(e) => set('course', parseInt(e.target.value) || 0)}
+              placeholder="Kurs ID"
               required
             />
-          </div>
+          </FormField>
 
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              Xona *
-            </label>
+          <FormField label="O'qituvchi *">
             <Input
-              value={newGroup.room}
-              onChange={(e) =>
-                setNewGroup((prev) => ({ ...prev, room: e.target.value }))
-              }
-              placeholder='Masalan: 201'
+              type="number"
+              value={newGroup.teacher || ''}
+              onChange={(e) => set('teacher', parseInt(e.target.value) || 0)}
+              placeholder="O'qituvchi ID"
               required
             />
+          </FormField>
+
+          {/* Vaqt */}
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Boshlanish vaqti *">
+              <Input
+                type="time"
+                value={newGroup.start_time}
+                onChange={(e) => set('start_time', e.target.value)}
+                required
+                className="[&::-webkit-calendar-picker-indicator]:hidden"
+              />
+            </FormField>
+
+            <FormField label="Tugash vaqti *">
+              <Input
+                type="time"
+                value={newGroup.end_time}
+                onChange={(e) => set('end_time', e.target.value)}
+                required
+                className="[&::-webkit-calendar-picker-indicator]:hidden"
+              />
+            </FormField>
           </div>
 
-          <div>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '4px',
-                fontSize: '14px',
-                fontWeight: '600',
-              }}
-            >
-              O&apos;quvchilar soni
-            </label>
-            <Input
-              type='number'
-              min='0'
-              value={newGroup.students}
-              onChange={(e) =>
-                setNewGroup((prev) => ({
-                  ...prev,
-                  students: parseInt(e.target.value) || 0,
-                }))
-              }
-              placeholder='0'
+          {/* Hafta kunlari */}
+          <FormField label="Hafta kunlari *">
+            <WeekDayPicker
+              value={newGroup.week_days}
+              onChange={(v) => set('week_days', v)}
             />
+          </FormField>
+
+          <FormField label="Holat *">
+            <Select
+              value={newGroup.status}
+              onValueChange={(v) => set('status', v as Status)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+          </FormField>
+
+          {/* Sanalar */}
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Boshlanish sanasi *">
+              <DatePicker
+                value={newGroup.start_date}
+                onChange={(v) => set('start_date', v)}
+              />
+            </FormField>
+
+            <FormField label="Tugash sanasi *">
+              <DatePicker
+                value={newGroup.end_date}
+                onChange={(v) => set('end_date', v)}
+              />
+            </FormField>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+          {/* Actions */}
+          <div className="flex gap-3 mt-2">
             <Button
-              type='button'
-              variant='outline'
+              type="button"
+              variant="outline"
               onClick={onClose}
-              style={{ flex: 1 }}
+              className="flex-1"
             >
               Bekor qilish
             </Button>
-            <RoseButton
-              type='submit'
-              style={{
-                flex: 1,
-                border: 'none',
-              }}
-            >
+            <RoseButton type="submit" className="flex-1">
               Guruh qo&apos;shish
             </RoseButton>
           </div>

@@ -2,10 +2,10 @@ import { apiClient } from '@/api/client'
 import { ATTENDANCE } from '@/constants/apiEndPoints'
 import type {
   AttendanceCreateRequest,
+  AttendanceBulkUpdateRequest,
+  AttendanceGroupAttendanceRequest,
   AttendanceItem,
   AttendanceListParams,
-  AttendanceStats,
-  AttendanceUpdateRequest,
   MyAttendanceItem,
 } from './attendance.type'
 
@@ -21,19 +21,22 @@ export const createAttendance = (
   return apiClient.post<AttendanceItem>(ATTENDANCE.LIST, data)
 }
 
-export const getMyAttendance = (
-  params?: AttendanceListParams
-): Promise<MyAttendanceItem[]> => {
-  return apiClient.get<MyAttendanceItem[]>(ATTENDANCE.MY, { params })
+export const bulkUpdateAttendance = (
+  data: AttendanceBulkUpdateRequest
+): Promise<AttendanceItem[]> => {
+  return apiClient.put<AttendanceItem[]>(ATTENDANCE.BULK_UPDATE, data)
 }
 
-export const getAttendanceStats = (groupId: number): Promise<AttendanceStats> => {
-  return apiClient.get<AttendanceStats>(ATTENDANCE.STATS(groupId))
+export const getMyAttendance = (): Promise<MyAttendanceItem[]> => {
+  return apiClient.get<MyAttendanceItem[]>(ATTENDANCE.MY)
 }
 
-export const updateAttendance = (
-  id: number,
-  data: AttendanceUpdateRequest
-): Promise<AttendanceItem> => {
-  return apiClient.put<AttendanceItem>(ATTENDANCE.UPDATE(id), data)
+export const groupAttendance = (
+  groupId: number,
+  data: AttendanceGroupAttendanceRequest
+): Promise<AttendanceItem[]> => {
+  return apiClient.post<AttendanceItem[]>(
+    ATTENDANCE.GROUP_ATTENDANCE(groupId),
+    data
+  )
 }
