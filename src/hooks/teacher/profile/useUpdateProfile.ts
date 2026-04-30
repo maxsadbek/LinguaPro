@@ -9,11 +9,13 @@ export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: (data: UpdateProfileRequest) => updateProfile(data),
     onSuccess: async () => {
+      // Profil yangilangandan so'ng yangi ma'lumotlarni darhol tortib keladi
       await queryClient.invalidateQueries({ queryKey: ['profile'] })
-      toast.success('Profile updated!')
+      toast.success('Profile successfully updated!')
     },
-    onError: () => {
-      toast.error('Failed to update profile')
+    onError: (error) => {
+      console.error('Update Profile Error:', error)
+      toast.error('Failed to update profile. Please try again.')
     },
   })
 }

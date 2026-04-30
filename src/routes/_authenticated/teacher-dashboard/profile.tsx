@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState, ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { createFileRoute } from '@tanstack/react-router'
-import { Loader2, Mail, Phone, Save } from 'lucide-react'
+import { Loader2, Save, Camera } from 'lucide-react'
 import { useProfile } from '@/hooks/teacher/profile/useProfile'
 import { useUpdateProfile } from '@/hooks/teacher/profile/useUpdateProfile'
 import { Input } from '@/components/ui/input'
@@ -22,8 +22,7 @@ export const Route = createFileRoute(
 
 type ProfileForm = {
   username: string
-  full_name: string
-  phone: string
+  avatar: string
   timezone: string
   bio: string
   learning_goal: string
@@ -45,6 +44,11 @@ function ProfilePage() {
   const { data: profile, isLoading, isError } = useProfile()
   const updateProfileMutation = useUpdateProfile()
 
+  // Rasm yuklash va preview uchun state'lar
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+
   const {
     register,
     handleSubmit,
@@ -59,21 +63,71 @@ function ProfilePage() {
     if (profile) {
       reset({
         username: profile.username || '',
-        full_name: profile.full_name || '',
-        phone: profile.phone || '',
-        timezone: 'Asia/Tashkent',
-        bio: '',
-        learning_goal: '',
+        avatar: profile.avatar || '',
+        timezone: profile.timezone || 'Asia/Tashkent',
+        bio: profile.bio || '',
+        learning_goal: profile.learning_goal || '',
       })
+      if (profile.avatar) {
+        setPreviewUrl(profile.avatar)
+      }
     }
   }, [profile, reset])
 
-  const onSubmit = (data: ProfileForm) => {
+  // Kompyuterdan rasm tanlanganda ishlaydigan funksiya
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      // Ekranda ko'rsatish uchun vaqtinchalik local URL yaratamiz
+      setPreviewUrl(URL.createObjectURL(file))
+    }
+  }
+
+  // Cloudinary'ga rasmni yuklash funksiyasi
+  const uploadToCloudinary = async (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    // DIQQAT: O'zingizning Cloudinary ma'lumotlaringizni shu yerga yozing
+    formData.append('upload_preset', 'YOUR_UPLOAD_PRESET') 
+    
+    // API manzilidagi YOUR_CLOUD_NAME ni ham o'zgartirishni unutmang
+    const response = await fetch(
+      'https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload',
+      {
+        method: 'POST',
+        body: formData,
+      }
+    )
+    
+    if (!response.ok) throw new Error('Rasm yuklashda xatolik yuz berdi')
+    
+    const data = await response.json()
+    return data.secure_url // Cloudinary qaytargan tayyor HTTP link
+  }
+
+  const onSubmit = async (data: ProfileForm) => {
+    let finalAvatarUrl = data.avatar
+
+    // Agar yangi rasm tanlangan bo'lsa, avval uni Cloudinary'ga yuklaymiz
+    if (selectedFile) {
+      setIsUploading(true)
+      try {
+        finalAvatarUrl = await uploadToCloudinary(selectedFile)
+        setValue('avatar', finalAvatarUrl, { shouldDirty: true })
+      } catch (error) {
+        console.error(error)
+        setIsUploading(false)
+        return // Xato bo'lsa formani yubormaymiz
+      }
+      setIsUploading(false)
+    }
+
+    // Cloudinary'dan kelgan link (yoki eskisi) bilan API'ga ma'lumot jo'natamiz
     updateProfileMutation.mutate({
-      username: data.username,
-      timezone: data.timezone,
-      bio: data.bio,
-      learning_goal: data.learning_goal,
+      ...data,
+      avatar: finalAvatarUrl,
     })
   }
 
@@ -93,62 +147,58 @@ function ProfilePage() {
     )
   }
 
-  const initialLetter = profile.full_name
-    ? profile.full_name[0].toUpperCase()
-    : profile.username
-      ? profile.username[0].toUpperCase()
-      : 'U'
-
   return (
     <div className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8'>
       <div className='mb-6 sm:mb-8'>
-        <h1 className='text-2xl font-bold text-gray-900 md:text-3xl'>
-          Profile
-        </h1>
+        <h1 className='text-2xl font-bold text-gray-900 md:text-3xl'>Profile</h1>
         <p className='mt-1 text-sm text-gray-500 md:text-base'>
           Manage your account settings and information
         </p>
       </div>
 
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-12'>
-        {/* Left Column: Profile Card (3 cols on desktop) */}
+        {/* Left Column: Avatar & Role */}
         <div className='col-span-1 lg:col-span-3'>
           <div className='rounded-2xl border border-slate-100 bg-white p-6 shadow-sm'>
             <div className='flex flex-col items-center text-center'>
-              <div className='mb-4'>
-                <div className='flex h-24 w-24 items-center justify-center rounded-full bg-rose-500 text-3xl font-bold text-white ring-4 ring-rose-50'>
-                  {initialLetter}
+              
+              {/* Rasm tanlash UI qismi */}
+              <div className='group relative mb-4 h-28 w-28'>
+                <div className='h-full w-full overflow-hidden rounded-full ring-4 ring-rose-50'>
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt='Profile'
+                      className='h-full w-full object-cover'
+                    />
+                  ) : (
+                    <div className='flex h-full w-full items-center justify-center bg-rose-500 text-4xl font-bold text-white'>
+                      {profile.username?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                  )}
                 </div>
+                
+                {/* Rasm ustiga hover qilganda chiqadigan "Camera" knopkasi */}
+                <label className='absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white bg-rose-500 text-white shadow-sm transition hover:bg-rose-600'>
+                  <Camera size={16} />
+                  <input
+                    type='file'
+                    className='hidden'
+                    accept='image/jpeg, image/png, image/webp'
+                    onChange={handleFileChange}
+                  />
+                </label>
               </div>
 
-              <h2 className='text-lg font-bold text-gray-900'>
-                {profile.full_name || profile.username}
-              </h2>
-              <p className='text-sm text-gray-500 capitalize'>{profile.role}</p>
-
-              <div className='mt-3 flex gap-2'>
-                <span className='rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700'>
-                  Teacher
-                </span>
-              </div>
-            </div>
-
-            <div className='mt-6 space-y-3 border-t border-slate-100 pt-6'>
-              <div className='flex items-center gap-3 text-sm text-gray-600'>
-                <Mail size={16} className='shrink-0 text-gray-400' />
-                <span className='truncate'>{profile.username}</span>
-              </div>
-              <div className='flex items-center gap-3 text-sm text-gray-600'>
-                <Phone size={16} className='shrink-0 text-gray-400' />
-                <span className='truncate'>
-                  {profile.phone || 'Not provided'}
-                </span>
-              </div>
+              <h2 className='text-lg font-bold text-gray-900'>{profile.username}</h2>
+              <span className='mt-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700'>
+                Teacher
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Form (9 cols on desktop) */}
+        {/* Right Column: Form */}
         <div className='col-span-1 lg:col-span-9'>
           <div className='rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8'>
             <h3 className='mb-6 text-lg font-bold text-gray-900 sm:text-xl'>
@@ -162,74 +212,40 @@ function ProfilePage() {
               <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
                 <div>
                   <label className='mb-1.5 block text-sm font-medium text-gray-700'>
-                    Full Name
-                  </label>
-                  <Input
-                    {...register('full_name')}
-                    placeholder='Enter your full name'
-                    className='h-11'
-                    disabled
-                  />
-                </div>
-
-                <div>
-                  <label className='mb-1.5 block text-sm font-medium text-gray-700'>
                     Username
                   </label>
                   <Input
-                    {...register('username', {
-                      required: 'Username is required',
-                    })}
+                    {...register('username', { required: 'Username is required' })}
                     placeholder='Enter your username'
                     className='h-11'
                   />
                   {errors.username && (
-                    <p className='mt-1 text-xs text-red-500'>
-                      {errors.username.message}
-                    </p>
+                    <p className='mt-1 text-xs text-red-500'>{errors.username.message}</p>
                   )}
+                </div>
+
+                <div>
+                  <label className='mb-1.5 block text-sm font-medium text-gray-700'>
+                    Timezone
+                  </label>
+                  <Select
+                    value={profile?.timezone || 'Asia/Tashkent'}
+                    onValueChange={(value) => setValue('timezone', value, { shouldDirty: true })}
+                  >
+                    <SelectTrigger className='h-11 w-full'>
+                      <SelectValue placeholder='Select timezone' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz} value={tz}>{tz}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div>
-                <label className='mb-1.5 block text-sm font-medium text-gray-700'>
-                  Phone
-                </label>
-                <Input
-                  {...register('phone')}
-                  placeholder='Enter your phone number'
-                  className='h-11'
-                  disabled
-                />
-              </div>
-
-              <div>
-                <label className='mb-1.5 block text-sm font-medium text-gray-700'>
-                  Timezone
-                </label>
-                <Select
-                  value={profile ? 'Asia/Tashkent' : 'Asia/Tashkent'}
-                  onValueChange={(value) =>
-                    setValue('timezone', value, { shouldDirty: true })
-                  }
-                >
-                  <SelectTrigger className='h-11 w-full'>
-                    <SelectValue placeholder='Select timezone' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIMEZONES.map((tz) => (
-                      <SelectItem key={tz} value={tz}>
-                        {tz}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className='mb-1.5 block text-sm font-medium text-gray-700'>
-                  Bio
-                </label>
+                <label className='mb-1.5 block text-sm font-medium text-gray-700'>Bio</label>
                 <textarea
                   {...register('bio')}
                   rows={4}
@@ -254,11 +270,18 @@ function ProfilePage() {
                 <RoseButton
                   type='submit'
                   form='profile-form'
-                  disabled={!isDirty || updateProfileMutation.isPending}
+                  disabled={
+                    (!isDirty && !selectedFile) || 
+                    updateProfileMutation.isPending || 
+                    isUploading
+                  }
                   className='px-6 py-2.5'
                 >
-                  {updateProfileMutation.isPending ? (
-                    <Loader2 size={18} className='animate-spin' />
+                  {updateProfileMutation.isPending || isUploading ? (
+                    <div className='flex items-center gap-2'>
+                      <Loader2 size={18} className='animate-spin' />
+                      {isUploading ? 'Uploading Image...' : 'Saving...'}
+                    </div>
                   ) : (
                     <>
                       <Save size={18} className='mr-2' />
