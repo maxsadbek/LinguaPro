@@ -1,14 +1,21 @@
+// profile.type.ts
+
 export interface UserData {
   id: number
-  username: string
-  full_name: string
   role: string
+  username: string
   phone: string | null
-  is_active: boolean
+  avatar: string | null
+  timezone: string
+  bio: string
+  learning_goal: string
   created_at: string
+  updated_at: string
 }
 
-export type ProfileResponse = UserData[]
+export interface ProfileResponse {
+  'User Data': UserData
+}
 
 export interface UpdateProfileRequest {
   username?: string
@@ -16,4 +23,13 @@ export interface UpdateProfileRequest {
   timezone?: string
   bio?: string
   learning_goal?: string
+}
+
+export interface UpdateProfileResponse {
+  id: number
+  username: string
+  avatar: string
+  timezone: string
+  bio: string
+  learning_goal: string
 }

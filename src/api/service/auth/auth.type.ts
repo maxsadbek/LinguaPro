@@ -10,17 +10,15 @@ export interface LoginResponse {
 }
 
 export interface UserProfile {
-  id: number
-  role: string
-  username: string
-  phone: string | null
-  avatar: string | null
-  timezone: string
-  bio: string
-  learning_goal: string
-  created_at: string
-  updated_at: string
+  id: number;
+  username: string;
+  full_name: string;
+  role: string;
+  phone: string;
+  is_active: boolean;
+  created_at: string;
 }
+
 
 export interface TokenPair {
   refresh: string

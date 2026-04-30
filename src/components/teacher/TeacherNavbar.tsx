@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   Bell,
@@ -10,18 +10,12 @@ import {
   Menu,
 } from 'lucide-react'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-
-type SessionUser = {
-  name?: string
-  email?: string
-}
+import { useProfile } from '@/hooks/teacher/profile/useProfile'
+import useUserStore from '@/stores/userStore'
 
 function getInitials(name?: string) {
   if (!name) return 'U'
-  const parts = name
-    .split(' ')
-    .map((p) => p.trim())
-    .filter(Boolean)
+  const parts = name.split(' ').map((p) => p.trim()).filter(Boolean)
   const first = parts[0]?.[0] ?? 'U'
   const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : ''
   return `${first}${last}`.toUpperCase()
@@ -32,55 +26,16 @@ interface TeacherNavbarProps {
 }
 
 export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
-  const [sessionUser] = useState<SessionUser | null>(() => {
-    const raw = sessionStorage.getItem('linguapro_user')
-    if (!raw) return null
-    try {
-      return JSON.parse(raw) as SessionUser
-    } catch {
-      return null
-    }
-  })
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
-  const [profileData, setProfileData] = useState<{
-    firstName?: string
-    lastName?: string
-    email?: string
-  } | null>(null)
+  const { data: profile } = useProfile()
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const clearUserInfoAndToken = useUserStore((s) => s.actions.clearUserInfoAndToken)
 
-  useEffect(() => {
-    const loadProfileData = () => {
-      const savedPhoto = localStorage.getItem('teacherProfilePhoto')
-      if (savedPhoto) setProfilePhoto(savedPhoto)
-
-      const savedProfile = localStorage.getItem('teacherProfileData')
-      if (savedProfile) {
-        try {
-          const data = JSON.parse(savedProfile)
-          setProfileData(data)
-        } catch {
-          // ignore
-        }
-      }
-    }
-
-    loadProfileData()
-    window.addEventListener('profileDataUpdated', loadProfileData)
-    return () =>
-      window.removeEventListener('profileDataUpdated', loadProfileData)
-  }, [])
-
-  const initials = useMemo(
-    () => getInitials(sessionUser?.name),
-    [sessionUser?.name]
-  )
+  const initials = useMemo(() => getInitials(profile?.username), [profile?.username])
 
   const handleLogout = () => {
-    sessionStorage.removeItem('linguapro_user')
-    sessionStorage.removeItem('linguapro_access_token')
+    clearUserInfoAndToken()
     navigate({ to: '/sign-in', replace: true })
   }
 
@@ -102,12 +57,6 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
     }
   }, [open])
 
-  const displayName = profileData?.firstName
-    ? `${profileData.firstName}${profileData.lastName ? ` ${profileData.lastName}` : ''}`
-    : (sessionUser?.name ?? 'Teacher')
-
-  const displayEmail = profileData?.email ?? sessionUser?.email ?? ''
-
   return (
     <header className='sticky top-0 z-50 flex w-full items-center justify-between border-b border-slate-100 bg-white/80 px-6 py-3 backdrop-blur-md'>
       {/* Left: mobile menu + search */}
@@ -123,7 +72,6 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
           <SidebarTrigger className='md:hidden' />
         )}
 
-        {/* Search */}
         <div className='relative hidden md:block'>
           <Search
             className='absolute top-1/2 left-3 -translate-y-1/2 text-slate-400'
@@ -139,18 +87,15 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
 
       {/* Right: icons + divider + user */}
       <div className='flex items-center gap-1'>
-        {/* Bell */}
         <Link
           to='/teacher-dashboard/notifications'
           className='relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100'
           aria-label='Notifications'
         >
           <Bell size={20} />
-          {/* red dot */}
           <span className='absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500' />
         </Link>
 
-        {/* Settings */}
         <Link
           to='/teacher-dashboard/settings'
           className='rounded-lg p-2 text-slate-500 transition hover:bg-slate-100'
@@ -159,7 +104,6 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
           <Settings size={20} />
         </Link>
 
-        {/* Divider */}
         <div className='mx-3 h-6 w-px bg-slate-200' />
 
         {/* User dropdown */}
@@ -171,22 +115,15 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
             aria-haspopup='menu'
             aria-expanded={open}
           >
-            {/* Name + email */}
             <div className='hidden text-right md:block'>
               <p className='text-base leading-5 font-semibold text-slate-800'>
-                {displayName}
+                {profile?.username ?? 'Teacher'}
               </p>
-              {displayEmail && (
-                <p className='text-sm leading-5 text-slate-400'>
-                  {displayEmail}
-                </p>
-              )}
             </div>
 
-            {/* Avatar */}
-            {profilePhoto ? (
+            {profile?.avatar ? (
               <img
-                src={profilePhoto}
+                src={profile.avatar}
                 alt='Profile'
                 className='h-11 w-11 rounded-full object-cover ring-2 ring-slate-200'
               />
@@ -197,7 +134,6 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
             )}
           </button>
 
-          {/* Dropdown */}
           {open && (
             <div
               role='menu'

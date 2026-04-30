@@ -40,11 +40,42 @@ const TIMEZONES = [
 const inputClassName =
   'w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-600/15 disabled:bg-gray-50 disabled:text-gray-500'
 
+// Uploadcare ga rasmni yuklaydigan funksiya
+const uploadToUploadcare = async (file: File): Promise<string> => {
+  const pubKey = import.meta.env.VITE_UPLOADCARE_PUBLIC_KEY
+  
+  // ← Shu console ga nima chiqadi tekshiring
+  console.log('Public key:', pubKey)
+  
+  if (!pubKey) {
+    throw new Error('VITE_UPLOADCARE_PUBLIC_KEY .env da topilmadi!')
+  }
+
+  const formData = new FormData()
+  formData.append('UPLOADCARE_PUB_KEY', pubKey)
+  formData.append('UPLOADCARE_STORE', 'auto')
+  formData.append('file', file)
+
+  const response = await fetch('https://upload.uploadcare.com/base/', {
+    method: 'POST',
+    body: formData,
+  })
+
+  const data = await response.json()
+  console.log('Uploadcare full response:', data)
+
+  // data.file mavjudligini tekshirish
+  if (!data.file) {
+    throw new Error(`Uploadcare xatosi: ${JSON.stringify(data)}`)
+  }
+
+  return `https://4yypsqu6p6.ucarecd.net/${data.file}/`
+}
+
 function ProfilePage() {
   const { data: profile, isLoading, isError } = useProfile()
   const updateProfileMutation = useUpdateProfile()
 
-  // Rasm yuklash va preview uchun state'lar
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -60,6 +91,7 @@ function ProfilePage() {
   })
 
   useEffect(() => {
+    console.log('Avatar URL:', profile?.avatar)
     if (profile) {
       reset({
         username: profile.username || '',
@@ -74,57 +106,30 @@ function ProfilePage() {
     }
   }, [profile, reset])
 
-  // Kompyuterdan rasm tanlanganda ishlaydigan funksiya
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       setSelectedFile(file)
-      // Ekranda ko'rsatish uchun vaqtinchalik local URL yaratamiz
       setPreviewUrl(URL.createObjectURL(file))
     }
-  }
-
-  // Cloudinary'ga rasmni yuklash funksiyasi
-  const uploadToCloudinary = async (file: File) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    
-    // DIQQAT: O'zingizning Cloudinary ma'lumotlaringizni shu yerga yozing
-    formData.append('upload_preset', 'YOUR_UPLOAD_PRESET') 
-    
-    // API manzilidagi YOUR_CLOUD_NAME ni ham o'zgartirishni unutmang
-    const response = await fetch(
-      'https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload',
-      {
-        method: 'POST',
-        body: formData,
-      }
-    )
-    
-    if (!response.ok) throw new Error('Rasm yuklashda xatolik yuz berdi')
-    
-    const data = await response.json()
-    return data.secure_url // Cloudinary qaytargan tayyor HTTP link
   }
 
   const onSubmit = async (data: ProfileForm) => {
     let finalAvatarUrl = data.avatar
 
-    // Agar yangi rasm tanlangan bo'lsa, avval uni Cloudinary'ga yuklaymiz
     if (selectedFile) {
       setIsUploading(true)
       try {
-        finalAvatarUrl = await uploadToCloudinary(selectedFile)
+        finalAvatarUrl = await uploadToUploadcare(selectedFile)
         setValue('avatar', finalAvatarUrl, { shouldDirty: true })
       } catch (error) {
         console.error(error)
         setIsUploading(false)
-        return // Xato bo'lsa formani yubormaymiz
+        return
       }
       setIsUploading(false)
     }
 
-    // Cloudinary'dan kelgan link (yoki eskisi) bilan API'ga ma'lumot jo'natamiz
     updateProfileMutation.mutate({
       ...data,
       avatar: finalAvatarUrl,
@@ -161,8 +166,6 @@ function ProfilePage() {
         <div className='col-span-1 lg:col-span-3'>
           <div className='rounded-2xl border border-slate-100 bg-white p-6 shadow-sm'>
             <div className='flex flex-col items-center text-center'>
-              
-              {/* Rasm tanlash UI qismi */}
               <div className='group relative mb-4 h-28 w-28'>
                 <div className='h-full w-full overflow-hidden rounded-full ring-4 ring-rose-50'>
                   {previewUrl ? (
@@ -177,8 +180,7 @@ function ProfilePage() {
                     </div>
                   )}
                 </div>
-                
-                {/* Rasm ustiga hover qilganda chiqadigan "Camera" knopkasi */}
+
                 <label className='absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white bg-rose-500 text-white shadow-sm transition hover:bg-rose-600'>
                   <Camera size={16} />
                   <input
@@ -271,8 +273,8 @@ function ProfilePage() {
                   type='submit'
                   form='profile-form'
                   disabled={
-                    (!isDirty && !selectedFile) || 
-                    updateProfileMutation.isPending || 
+                    (!isDirty && !selectedFile) ||
+                    updateProfileMutation.isPending ||
                     isUploading
                   }
                   className='px-6 py-2.5'
