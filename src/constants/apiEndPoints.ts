@@ -4,6 +4,8 @@ const API_ENDPOINTS = {
     FORGOT_PASSWORD: '/api/auth/forgot-password/',
     VERIFY_PASSWORD: '/api/auth/verify-password/',
     USER_LIST: '/api/auth/user-list/',
+    PROFILE_GET: '/api/auth/my-profile-list/',
+    PROFILE_UPDATE: '/api/auth/my-profile-update-delete/',
   },
   ATTENDANCE: {
     LIST: '/api/attendance/list',
