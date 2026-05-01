@@ -5,7 +5,11 @@ import { loginService } from '@/api/service/auth/auth.service'
 import type { LoginRequest, LoginResponse } from '@/api/service/auth/auth.type'
 import useUserStore, { type UserInfo } from '@/stores/userStore'
 
-export const useLogin = () => {
+type UseLoginOptions = {
+  redirectTo?: string
+}
+
+export const useLogin = ({ redirectTo }: UseLoginOptions = {}) => {
   const navigate = useNavigate()
 
   return useMutation<LoginResponse, AxiosError, LoginRequest>({
@@ -27,7 +31,8 @@ export const useLogin = () => {
         .actions.setUserInfo(data.user as unknown as UserInfo)
 
       const to =
-        data.user.role === 'teacher' ? '/teacher-dashboard' : '/admin-dashboard'
+        redirectTo ||
+        (data.user.role === 'teacher' ? '/teacher-dashboard' : '/admin-dashboard')
       navigate({ to, replace: true })
     },
   })

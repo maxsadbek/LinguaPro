@@ -12,7 +12,7 @@ class ApiClient {
 	private client: AxiosInstance;
 	constructor() {
 		this.client = axios.create({
-			baseURL: import.meta.env.VITE_API_URL,
+			baseURL: import.meta.env.VITE_API_BASE_URL,
 			timeout: 30000,
 			headers: {
 				"Content-Type": "application/json",
@@ -56,7 +56,7 @@ class ApiClient {
 					// 401 — token eskirgan yoki noto'g'ri
 					if (status === 401) {
 						useUserStore.getState().actions.clearUserInfoAndToken();
-						window.location.href = "/auth/login";
+						window.location.href = "/sign-in";
 					}
 
 					const msg = String(data?.message ?? "");

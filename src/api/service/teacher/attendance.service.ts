@@ -7,6 +7,7 @@ import type {
   AttendanceItem,
   AttendanceListParams,
   MyAttendanceItem,
+  AttendanceUpdateRequest,
 } from './attendance.type'
 
 export const getAttendanceList = (
@@ -19,6 +20,13 @@ export const createAttendance = (
   data: AttendanceCreateRequest
 ): Promise<AttendanceItem> => {
   return apiClient.post<AttendanceItem>(ATTENDANCE.LIST, data)
+}
+
+export const updateAttendance = (
+  id: number,
+  data: AttendanceUpdateRequest
+): Promise<AttendanceItem> => {
+  return apiClient.patch<AttendanceItem>(ATTENDANCE.UPDATE(id), data)
 }
 
 export const bulkUpdateAttendance = (

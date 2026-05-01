@@ -12,6 +12,7 @@ const API_ENDPOINTS = {
     MY: '/api/attendance/my/',
     BULK_UPDATE: '/api/attendance/bulk-update/',
     GROUP_ATTENDANCE: (groupId: number) => `/api/attendance/stats/${groupId}/`,
+    UPDATE: (id: number) => `/api/attendance/update/${id}/`,
   },
   GROUP: {
     MY: '/api/groups/my/',

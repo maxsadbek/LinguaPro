@@ -23,24 +23,27 @@ import { cn } from '@/lib/utils'
 
 type Status = 'active' | 'inactive' | 'archived'
 
-interface NewGroup {
-  name: string
-  course: number
-  teacher: number
-  start_time: string
-  end_time: string
-  week_days: string   // "Mon,Wed,Fri"
-  status: Status
-  start_date: string  // "YYYY-MM-DD"
-  end_date: string    // "YYYY-MM-DD"
+export interface NewGroup {
+  name?: string
+  description?: string
+  course?: number
+  teacher?: number
+  start_time?: string
+  end_time?: string
+  week_days?: string // "Mon,Wed,Fri"
+  status?: Status
+  start_date?: string // "YYYY-MM-DD"
+  end_date?: string // "YYYY-MM-DD"
+  room?: string
+  students?: number
 }
 
 interface GroupModalProps {
   isOpen: boolean
   onClose: () => void
   onAddGroup: () => void
-  newGroup: NewGroup
-  setNewGroup: React.Dispatch<React.SetStateAction<NewGroup>>
+  newGroup: Record<string, unknown>
+  setNewGroup: React.Dispatch<React.SetStateAction<any>>
 }
 
 // ─── constants ─────────────────────────────────────────────────────
@@ -180,8 +183,10 @@ export function GroupModal({
 }: GroupModalProps) {
   if (!isOpen) return null
 
+  const group = newGroup as Partial<NewGroup>
+
   const set = <K extends keyof NewGroup>(key: K, value: NewGroup[K]) =>
-    setNewGroup((prev) => ({ ...prev, [key]: value }))
+    setNewGroup((prev: Record<string, unknown>) => ({ ...prev, [key]: value }))
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -205,7 +210,7 @@ export function GroupModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <FormField label="Guruh nomi *">
             <Input
-              value={newGroup.name}
+              value={group.name ?? ''}
               onChange={(e) => set('name', e.target.value)}
               placeholder="Masalan: IELTS 7.5 Morning"
               required
@@ -215,7 +220,7 @@ export function GroupModal({
           <FormField label="Kurs *">
             <Input
               type="number"
-              value={newGroup.course || ''}
+              value={group.course ?? ''}
               onChange={(e) => set('course', parseInt(e.target.value) || 0)}
               placeholder="Kurs ID"
               required
@@ -225,7 +230,7 @@ export function GroupModal({
           <FormField label="O'qituvchi *">
             <Input
               type="number"
-              value={newGroup.teacher || ''}
+              value={group.teacher ?? ''}
               onChange={(e) => set('teacher', parseInt(e.target.value) || 0)}
               placeholder="O'qituvchi ID"
               required
@@ -237,7 +242,7 @@ export function GroupModal({
             <FormField label="Boshlanish vaqti *">
               <Input
                 type="time"
-                value={newGroup.start_time}
+                value={group.start_time ?? ''}
                 onChange={(e) => set('start_time', e.target.value)}
                 required
                 className="[&::-webkit-calendar-picker-indicator]:hidden"
@@ -247,7 +252,7 @@ export function GroupModal({
             <FormField label="Tugash vaqti *">
               <Input
                 type="time"
-                value={newGroup.end_time}
+                value={group.end_time ?? ''}
                 onChange={(e) => set('end_time', e.target.value)}
                 required
                 className="[&::-webkit-calendar-picker-indicator]:hidden"
@@ -258,14 +263,14 @@ export function GroupModal({
           {/* Hafta kunlari */}
           <FormField label="Hafta kunlari *">
             <WeekDayPicker
-              value={newGroup.week_days}
+              value={group.week_days ?? ''}
               onChange={(v) => set('week_days', v)}
             />
           </FormField>
 
           <FormField label="Holat *">
             <Select
-              value={newGroup.status}
+              value={group.status ?? 'active'}
               onValueChange={(v) => set('status', v as Status)}
             >
               <SelectTrigger className="w-full">
@@ -283,14 +288,14 @@ export function GroupModal({
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Boshlanish sanasi *">
               <DatePicker
-                value={newGroup.start_date}
+                value={group.start_date ?? ''}
                 onChange={(v) => set('start_date', v)}
               />
             </FormField>
 
             <FormField label="Tugash sanasi *">
               <DatePicker
-                value={newGroup.end_date}
+                value={group.end_date ?? ''}
                 onChange={(v) => set('end_date', v)}
               />
             </FormField>

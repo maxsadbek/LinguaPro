@@ -14,7 +14,7 @@ function AnnouncementsPage() {
           <h1 className='text-3xl font-bold text-gray-800'>Announcements</h1>
           <p className='mt-2 text-gray-500'>Create and manage announcements for your classes</p>
         </div>
-        <RoseButton className='rounded-xl px-6 py-3' gradient>
+        <RoseButton className='rounded-xl px-6 py-3' roseVariant='gradient'>
           <Plus size={18} />
           New Announcement
         </RoseButton>

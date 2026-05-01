@@ -2,7 +2,6 @@ import { useMemo, useRef, useState, useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   Bell,
-  ChevronDown,
   LogOut,
   Search,
   Settings,

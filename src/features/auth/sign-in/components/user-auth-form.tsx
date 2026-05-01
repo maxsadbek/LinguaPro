@@ -44,10 +44,16 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>
 
-interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {}
+interface UserAuthFormProps extends React.HTMLAttributes<HTMLFormElement> {
+  redirectTo?: string
+}
 
-export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
-  const loginMutation = useLogin()
+export function UserAuthForm({
+  className,
+  redirectTo,
+  ...props
+}: UserAuthFormProps) {
+  const loginMutation = useLogin({ redirectTo })
 
   const focusInputStyle = 'focus-visible:ring-[#C70C3D] focus-visible:ring-offset-0'
 

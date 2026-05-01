@@ -14,7 +14,7 @@ function LoginPage() {
 
   if (token.accessToken) {
     const isTeacher = hasAccessCode(userInfo.roles, 'ROLE_TEACHER')
-    return <Navigate to={isTeacher ? '/teacher-dashboard' : '/'} replace />
+    return <Navigate to={isTeacher ? '/teacher-dashboard' : '/admin-dashboard'} replace />
   }
 
   return <SignIn />

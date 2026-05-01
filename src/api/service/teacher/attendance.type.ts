@@ -22,6 +22,11 @@ export interface AttendanceCreateRequest {
   note?: string
 }
 
+export interface AttendanceUpdateRequest {
+  status?: AttendanceStatus
+  note?: string
+}
+
 export interface AttendanceBulkUpdateRequest {
   records: { id: number; status: AttendanceStatus; note?: string }[]
 }
