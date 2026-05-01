@@ -1,9 +1,17 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { BookOpen, Plus, Download } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  useDeleteAssignment,
+  useGetAssignments,
+  useGradeAssignment,
+  useUpdateAssignment,
+} from '@/hooks/useAssignments'
 import { RoseButton } from '@/components/ui/rose-button'
 import { AssignTaskModal } from '@/components/teacher/modals/AssignTaskModal'
 import { GroupDetailsModal } from '@/components/teacher/modals/GroupDetailsModal'
+import type { Assignment } from '@/types/assignment.types'
 
 export const Route = createFileRoute(
   '/_authenticated/teacher-dashboard/homework'
@@ -15,6 +23,79 @@ function HomeworkPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [groupDetailsOpen, setGroupDetailsOpen] = useState(false)
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all')
+  const { data: assignments, isLoading } = useGetAssignments()
+  const deleteMutation = useDeleteAssignment()
+  const updateMutation = useUpdateAssignment()
+  const gradeMutation = useGradeAssignment()
+
+  const formatDate = (value: string) => {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return value
+    return date.toLocaleDateString('uz-UZ', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
+  const getStatus = (item: Assignment): 'active' | 'completed' => {
+    return new Date(item.deadline).getTime() >= Date.now() ? 'active' : 'completed'
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Topshiriqni o'chirishni tasdiqlaysizmi?")) return
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success("Topshiriq o'chirildi")
+    } catch {
+      toast.error("Topshiriqni o'chirishda xatolik yuz berdi")
+    }
+  }
+
+  const handleQuickEdit = async (item: Assignment) => {
+    const title = window.prompt('Yangi vazifa nomi', item.title)
+    if (!title) return
+    try {
+      await updateMutation.mutateAsync({
+        id: item.id,
+        payload: {
+          title,
+          description: item.description,
+          group: item.group,
+          deadline: item.deadline,
+          max_score: item.max_score,
+          attachment: item.attachment,
+          submission_type: item.submission_type,
+        },
+      })
+      toast.success('Vazifa yangilandi')
+    } catch {
+      toast.error('Vazifani yangilashda xatolik yuz berdi')
+    }
+  }
+
+  const handleGrade = async (item: Assignment) => {
+    const raw = window.prompt(`Ball kiriting (0 - ${item.max_score})`, '0')
+    if (raw === null) return
+    const score = Number(raw)
+    if (Number.isNaN(score) || score < 0 || score > item.max_score) {
+      toast.error('Kiritilgan ball noto‘g‘ri')
+      return
+    }
+    try {
+      await gradeMutation.mutateAsync({ id: item.id, payload: { score } })
+      toast.success("Baholash muvaffaqiyatli bajarildi")
+    } catch {
+      toast.error("Baholashda xatolik yuz berdi")
+    }
+  }
+
+  const filteredAssignments = (assignments ?? []).filter((hw) => {
+    const status = getStatus(hw)
+    if (filter === 'active') return status === 'active'
+    if (filter === 'completed') return status === 'completed'
+    return true
+  })
 
   return (
     <div>
@@ -82,48 +163,20 @@ function HomeworkPage() {
 
       {/* Homework Cards */}
       <div className='grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-2'>
-        {[
-          {
-            title: 'Unit 5 Quiz',
-            group: 'IELTS 7.5 Morning',
-            due: '22-Aprel, 2026',
-            submitted: 22,
-            total: 25,
-            status: 'active',
-          },
-          {
-            title: 'Essay Writing',
-            group: 'General English B2',
-            due: '25-Aprel, 2026',
-            submitted: 15,
-            total: 22,
-            status: 'active',
-          },
-          {
-            title: 'Vocabulary Exercise',
-            group: 'Kids Starter',
-            due: '18-Aprel, 2026',
-            submitted: 18,
-            total: 18,
-            status: 'completed',
-          },
-          {
-            title: 'Grammar Practice',
-            group: 'IELTS Intensive',
-            due: '23-Aprel, 2026',
-            submitted: 8,
-            total: 20,
-            status: 'active',
-          },
-        ]
-          .filter((hw) => {
-            if (filter === 'active') return hw.status === 'active'
-            if (filter === 'completed') return hw.status === 'completed'
-            return true
-          })
-          .map((hw, index) => (
+        {isLoading ? (
+          <div className='rounded-2xl bg-white p-6 text-sm text-gray-500 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+            Topshiriqlar yuklanmoqda...
+          </div>
+        ) : filteredAssignments.length === 0 ? (
+          <div className='rounded-2xl bg-white p-6 text-sm text-gray-500 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+            Hozircha topshiriqlar mavjud emas.
+          </div>
+        ) : (
+          filteredAssignments.map((hw) => {
+            const status = getStatus(hw)
+            return (
             <div
-              key={index}
+              key={hw.id}
               className='rounded-2xl bg-white p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'
             >
               <div className='mb-4 flex items-start justify-between'>
@@ -132,37 +185,65 @@ function HomeworkPage() {
                 </div>
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    hw.status === 'active'
+                    status === 'active'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-gray-100 text-gray-700'
                   }`}
                 >
-                  {hw.status === 'active' ? 'Faol' : 'Tugatilgan'}
+                  {status === 'active' ? 'Faol' : 'Tugatilgan'}
                 </span>
               </div>
               <h3 className='text-lg font-bold text-gray-800'>{hw.title}</h3>
-              <p className='text-sm text-gray-500'>{hw.group}</p>
+              <p className='text-sm text-gray-500'>Guruh ID: {hw.group}</p>
               <div className='mt-4 flex items-center justify-between text-sm text-gray-600'>
-                <span>Muddat: {hw.due}</span>
+                <span>Muddat: {formatDate(hw.deadline)}</span>
                 <span>
-                  {hw.submitted}/{hw.total} topshirildi
+                  Maks ball: {hw.max_score}
                 </span>
               </div>
               <div className='mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-200'>
                 <div
                   className='h-full bg-[#b80035]'
-                  style={{ width: `${(hw.submitted / hw.total) * 100}%` }}
+                  style={{
+                    width:
+                      status === 'active'
+                        ? `${Math.min(
+                            Math.max(
+                              ((new Date(hw.deadline).getTime() - Date.now()) /
+                                (7 * 24 * 60 * 60 * 1000)) *
+                                100,
+                              10
+                            ),
+                            100
+                          )}%`
+                        : '100%',
+                  }}
                 />
               </div>
-              <RoseButton
-                className='mt-4 w-full'
-                roseVariant='outline'
-                onClick={() => setGroupDetailsOpen(true)}
-              >
-                Batafsil
-              </RoseButton>
+              <div className='mt-4 grid grid-cols-2 gap-2'>
+                <RoseButton roseVariant='outline' onClick={() => handleQuickEdit(hw)}>
+                  Tahrirlash
+                </RoseButton>
+                <RoseButton roseVariant='outline' onClick={() => handleGrade(hw)}>
+                  Baholash
+                </RoseButton>
+                <RoseButton roseVariant='outline' onClick={() => handleDelete(hw.id)}>
+                  O&apos;chirish
+                </RoseButton>
+                <RoseButton
+                  roseVariant='outline'
+                  onClick={() =>
+                    hw.attachment
+                      ? window.open(hw.attachment, '_blank')
+                      : setGroupDetailsOpen(true)
+                  }
+                >
+                  Batafsil
+                </RoseButton>
+              </div>
             </div>
-          ))}
+          )})
+        )}
       </div>
     </div>
   )
