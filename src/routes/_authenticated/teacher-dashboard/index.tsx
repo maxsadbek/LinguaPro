@@ -1,6 +1,8 @@
-import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Users, ClipboardCheck, MessageSquare, Video } from 'lucide-react'
+import { Users, ClipboardCheck, MessageSquare } from 'lucide-react'
+import { useTeacherGroups } from '@/hooks/teacher/groups/useTeacherGroups'
+import { useProfile } from '@/hooks/teacher/profile/useProfile'
+import { useUnreadCount } from '@/features/notifications/hooks'
 
 interface StatCardProps {
   icon: React.ReactNode
@@ -56,8 +58,8 @@ const HomeworkRow = ({
   }
 
   return (
-    <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-gray-100 py-4 last:border-0'>
-      <div className='flex w-full sm:w-auto items-center gap-4'>
+    <div className='flex flex-col items-start justify-between gap-3 border-b border-gray-100 py-4 last:border-0 sm:flex-row sm:items-center sm:gap-4'>
+      <div className='flex w-full items-center gap-4 sm:w-auto'>
         <div
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ${color}`}
         >
@@ -70,7 +72,7 @@ const HomeworkRow = ({
           </p>
         </div>
       </div>
-      <div className='flex w-full sm:w-auto items-center justify-between sm:justify-end gap-4 pl-14 sm:pl-0'>
+      <div className='flex w-full items-center justify-between gap-4 pl-14 sm:w-auto sm:justify-end sm:pl-0'>
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[statusType]}`}
         >
@@ -97,53 +99,31 @@ const ScheduleItem = ({ time, title, detail }: ScheduleItemProps) => {
   )
 }
 
-const LiveSessionCard = () => {
-  return (
-    <div className='rounded-2xl bg-gradient-to-br from-[#b80035] to-[#e11d48] p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
-      <div className='mb-4 flex items-center gap-3'>
-        <div className='flex h-10 w-10 items-center justify-center rounded-full bg-white/20'>
-          <Video size={20} className='text-white' />
-        </div>
-        <div>
-          <p className='text-lg font-bold text-white'>Live Session</p>
-          <p className='text-sm text-white/80'>Starting in 15 minutes</p>
-        </div>
-      </div>
-      <p className='mb-4 text-sm text-white/90'>
-        Intermediate Spanish - Group B
-      </p>
-      <button className='w-full rounded-xl bg-white py-3 font-semibold text-[#b80035] transition-colors hover:bg-white/90'>
-        Open Classroom
-      </button>
-    </div>
-  )
-}
-
 export const Route = createFileRoute('/_authenticated/teacher-dashboard/')({
   component: DashboardPage,
 })
 
 function DashboardPage() {
-  const [user] = useState(() => {
-    if (typeof window === 'undefined') return null
-    const raw = sessionStorage.getItem('linguapro_user')
-    if (!raw) return null
-    try {
-      const parsedUser = JSON.parse(raw)
-      return parsedUser.role === 'teacher' ? parsedUser : null
-    } catch {
-      return null
-    }
-  })
+  const { data: groups = [], isLoading: isLoadingGroups } = useTeacherGroups()
+  const { data: unreadData, isLoading: isLoadingUnread } = useUnreadCount()
+  const { data: profile } = useProfile()
+
+  const activeGroupsCount = groups.filter(
+    (group) => group.status === 'active'
+  ).length
+  const teacherStudentsCount = new Set(
+    groups.flatMap((group) => group.students.map((student) => student.student))
+  ).size
+  const unreadCount = unreadData?.unread_count ?? 0
 
   return (
     <>
       {/* Welcome Section */}
       <div className='mb-6 md:mb-8'>
-        <h1 className='text-2xl md:text-3xl font-bold text-gray-800'>
+        <h1 className='text-2xl font-bold text-gray-800 md:text-3xl'>
           Welcome back,{' '}
           <span className='text-[#b80035]'>
-            {user?.name?.split(' ')[0] || 'Elena'}
+            {profile?.username || 'teacher'}
           </span>
           .
         </h1>
@@ -153,18 +133,17 @@ function DashboardPage() {
       </div>
 
       {/* Stats Row */}
-      <div className='mb-6 md:mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5'>
+      <div className='mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:mb-8 md:gap-5 lg:grid-cols-4'>
         <StatCard
           icon={<Users size={24} />}
-          value='12'
+          value={isLoadingGroups ? '...' : String(activeGroupsCount)}
           label='Active Groups'
-          badge={
-            <span className='rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-600'>
-              +2 new
-            </span>
-          }
         />
-        <StatCard icon={<Users size={24} />} value='148' label='Students' />
+        <StatCard
+          icon={<Users size={24} />}
+          value={isLoadingGroups ? '...' : String(teacherStudentsCount)}
+          label='Students'
+        />
         <StatCard
           icon={<ClipboardCheck size={24} />}
           value='24'
@@ -177,21 +156,23 @@ function DashboardPage() {
         />
         <StatCard
           icon={<MessageSquare size={24} />}
-          value='08'
+          value={isLoadingUnread ? '...' : String(unreadCount)}
           label='Unread Msg'
           badge={
-            <span className='relative flex h-3 w-3'>
-              <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75'></span>
-              <span className='relative inline-flex h-3 w-3 rounded-full bg-red-500'></span>
-            </span>
+            unreadCount > 0 ? (
+              <span className='relative flex h-3 w-3'>
+                <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75'></span>
+                <span className='relative inline-flex h-3 w-3 rounded-full bg-red-500'></span>
+              </span>
+            ) : undefined
           }
         />
       </div>
 
       {/* Two Column Section */}
-      <div className='mb-6 md:mb-8 grid grid-cols-1 lg:grid-cols-5 gap-6'>
+      <div className='mb-6 grid grid-cols-1 gap-6 md:mb-8 lg:grid-cols-5'>
         {/* Homework Submissions - Left (60%) */}
-        <div className='col-span-1 lg:col-span-3 rounded-2xl bg-white p-4 md:p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+        <div className='col-span-1 rounded-2xl bg-white p-4 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)] md:p-6 lg:col-span-3'>
           <div className='mb-6 flex items-center justify-between'>
             <h2 className='text-lg font-bold text-gray-800'>
               Homework Submissions
@@ -233,7 +214,7 @@ function DashboardPage() {
         </div>
 
         {/* Today's Schedule - Right (40%) */}
-        <div className='col-span-1 lg:col-span-2 rounded-2xl bg-white p-4 md:p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+        <div className='col-span-1 rounded-2xl bg-white p-4 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)] md:p-6 lg:col-span-2'>
           <div className='mb-6 flex items-center justify-between'>
             <h2 className='text-lg font-bold text-gray-800'>
               Today's Schedule
@@ -263,11 +244,6 @@ function DashboardPage() {
             detail='Conference Room B'
           />
         </div>
-      </div>
-
-      {/* Live Session Card */}
-      <div className='w-full max-w-lg'>
-        <LiveSessionCard />
       </div>
     </>
   )

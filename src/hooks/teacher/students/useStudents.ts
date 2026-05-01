@@ -1,16 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { getUsers } from '@/api/service/teacher/user.service'
+import { getAvailableStudents } from '@/api/service/teacher/group.service'
 
-export const useStudents = () => {
+export const useStudents = (groupId?: number) => {
   return useQuery({
-    queryKey: ['students'],
-    queryFn: async () => {
-      const response = await getUsers()
-      // Filter only students by role
-      const students = response.results.filter(
-        (user) => user.role === 'student'
-      )
-      return students
-    },
+    queryKey: ['students', 'available', groupId],
+    queryFn: () => getAvailableStudents(groupId as number),
+    enabled: Boolean(groupId),
   })
 }

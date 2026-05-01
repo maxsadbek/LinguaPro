@@ -1,5 +1,3 @@
-// useProfile.ts
-
 import { useQuery } from '@tanstack/react-query'
 import { getProfile } from '@/api/service/teacher/profile.service'
 

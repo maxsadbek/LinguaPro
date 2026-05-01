@@ -1,10 +1,11 @@
-import { useEffect, useState, ChangeEvent } from 'react'
+import { useEffect, useState, ChangeEvent, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { createFileRoute } from '@tanstack/react-router'
-import { Loader2, Save, Camera } from 'lucide-react'
+import { Loader2, Save, Camera, User } from 'lucide-react'
 import { useProfile } from '@/hooks/teacher/profile/useProfile'
 import { useUpdateProfile } from '@/hooks/teacher/profile/useUpdateProfile'
 import { Input } from '@/components/ui/input'
+// Shadcn Textarea qo'shildi
 import { RoseButton } from '@/components/ui/rose-button'
 import {
   Select,
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 
 export const Route = createFileRoute(
   '/_authenticated/teacher-dashboard/profile'
@@ -28,46 +30,23 @@ type ProfileForm = {
   learning_goal: string
 }
 
-const TIMEZONES = [
-  'Asia/Tashkent',
-  'Asia/Dubai',
-  'Asia/Kolkata',
-  'Europe/London',
-  'America/New_York',
-  'America/Los_Angeles',
-]
-
-const inputClassName =
-  'w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-900 outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-600/15 disabled:bg-gray-50 disabled:text-gray-500'
-
-// Uploadcare ga rasmni yuklaydigan funksiya
+// Uploadcare funksiyasi
 const uploadToUploadcare = async (file: File): Promise<string> => {
   const pubKey = import.meta.env.VITE_UPLOADCARE_PUBLIC_KEY
-  
-  // ← Shu console ga nima chiqadi tekshiring
-  console.log('Public key:', pubKey)
-  
-  if (!pubKey) {
-    throw new Error('VITE_UPLOADCARE_PUBLIC_KEY .env da topilmadi!')
-  }
+  if (!pubKey) throw new Error('VITE_UPLOADCARE_PUBLIC_KEY topilmadi!')
 
   const formData = new FormData()
   formData.append('UPLOADCARE_PUB_KEY', pubKey)
   formData.append('UPLOADCARE_STORE', 'auto')
   formData.append('file', file)
 
-  const response = await fetch('https://upload.uploadcare.com/base/', {
+  const res = await fetch('https://upload.uploadcare.com/base/', {
     method: 'POST',
     body: formData,
   })
 
-  const data = await response.json()
-  console.log('Uploadcare full response:', data)
-
-  // data.file mavjudligini tekshirish
-  if (!data.file) {
-    throw new Error(`Uploadcare xatosi: ${JSON.stringify(data)}`)
-  }
+  const data = await res.json()
+  if (!data.file) throw new Error('Uploadcare xatosi yuz berdi')
 
   return `https://4yypsqu6p6.ucarecd.net/${data.file}/`
 }
@@ -80,6 +59,16 @@ function ProfilePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
 
+  // Real vaqt mintaqalarini dinamik olish (Mock data o'rniga)
+  const timezones = useMemo(() => {
+    try {
+      return Intl.supportedValuesOf('timeZone')
+    } catch (error) {
+      // Eskiroq brauzerlar uchun fallback
+      return ['Asia/Tashkent', 'UTC']
+    }
+  }, [])
+
   const {
     register,
     handleSubmit,
@@ -91,7 +80,6 @@ function ProfilePage() {
   })
 
   useEffect(() => {
-    console.log('Avatar URL:', profile?.avatar)
     if (profile) {
       reset({
         username: profile.username || '',
@@ -100,9 +88,7 @@ function ProfilePage() {
         bio: profile.bio || '',
         learning_goal: profile.learning_goal || '',
       })
-      if (profile.avatar) {
-        setPreviewUrl(profile.avatar)
-      }
+      if (profile.avatar) setPreviewUrl(profile.avatar)
     }
   }, [profile, reset])
 
@@ -130,163 +116,169 @@ function ProfilePage() {
       setIsUploading(false)
     }
 
-    updateProfileMutation.mutate({
-      ...data,
-      avatar: finalAvatarUrl,
-    })
+    updateProfileMutation.mutate({ ...data, avatar: finalAvatarUrl })
   }
 
   if (isLoading) {
     return (
-      <div className='flex h-64 items-center justify-center text-rose-500'>
-        <Loader2 className='animate-spin' size={32} />
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <Loader2 className='animate-spin text-rose-500' size={40} />
       </div>
     )
   }
 
   if (isError || !profile) {
     return (
-      <div className='rounded-xl border border-rose-200 bg-rose-50 p-4 text-center text-sm text-rose-700'>
+      <div className='m-4 rounded-xl border border-rose-200 bg-rose-50 p-6 text-center text-rose-600'>
         Failed to load profile. Please try again later.
       </div>
     )
   }
 
+  const isFormDisabled = updateProfileMutation.isPending || isUploading
+
   return (
-    <div className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8'>
-      <div className='mb-6 sm:mb-8'>
-        <h1 className='text-2xl font-bold text-gray-900 md:text-3xl'>Profile</h1>
-        <p className='mt-1 text-sm text-gray-500 md:text-base'>
-          Manage your account settings and information
+    <div className='mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8'>
+      <div className='mb-8'>
+        <h1 className='text-3xl font-bold tracking-tight text-gray-900'>
+          My Profile
+        </h1>
+        <p className='mt-2 text-sm text-gray-500'>
+          Update your personal details and public profile.
         </p>
       </div>
 
-      <div className='grid grid-cols-1 gap-6 lg:grid-cols-12'>
-        {/* Left Column: Avatar & Role */}
-        <div className='col-span-1 lg:col-span-3'>
-          <div className='rounded-2xl border border-slate-100 bg-white p-6 shadow-sm'>
-            <div className='flex flex-col items-center text-center'>
-              <div className='group relative mb-4 h-28 w-28'>
-                <div className='h-full w-full overflow-hidden rounded-full ring-4 ring-rose-50'>
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt='Profile'
-                      className='h-full w-full object-cover'
-                    />
-                  ) : (
-                    <div className='flex h-full w-full items-center justify-center bg-rose-500 text-4xl font-bold text-white'>
-                      {profile.username?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                  )}
-                </div>
-
-                <label className='absolute bottom-0 right-0 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white bg-rose-500 text-white shadow-sm transition hover:bg-rose-600'>
-                  <Camera size={16} />
-                  <input
-                    type='file'
-                    className='hidden'
-                    accept='image/jpeg, image/png, image/webp'
-                    onChange={handleFileChange}
+      <div className='flex flex-col gap-8 md:flex-row'>
+        {/* Chap ustun: Avatar */}
+        <div className='w-full md:w-1/3 lg:w-1/4'>
+          <div className='flex flex-col items-center rounded-xl border bg-card p-6 text-card-foreground shadow-sm'>
+            <div className='group relative mb-4'>
+              <div className='h-32 w-32 overflow-hidden rounded-full border-4 border-muted'>
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt='Profile'
+                    className='h-full w-full object-cover'
                   />
-                </label>
+                ) : (
+                  <div className='flex h-full w-full items-center justify-center bg-muted text-muted-foreground'>
+                    <User size={48} />
+                  </div>
+                )}
               </div>
-
-              <h2 className='text-lg font-bold text-gray-900'>{profile.username}</h2>
-              <span className='mt-2 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700'>
-                Teacher
-              </span>
+              <label className='absolute right-1 bottom-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-transform hover:scale-105'>
+                <Camera size={16} />
+                <input
+                  type='file'
+                  className='hidden'
+                  accept='image/jpeg, image/png, image/webp'
+                  onChange={handleFileChange}
+                  disabled={isFormDisabled}
+                />
+              </label>
             </div>
+            <h2 className='text-lg font-semibold text-foreground'>
+              {profile.username || 'User'}
+            </h2>
+            <span className='mt-1 text-sm text-muted-foreground'>Teacher</span>
           </div>
         </div>
 
-        {/* Right Column: Form */}
-        <div className='col-span-1 lg:col-span-9'>
-          <div className='rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8'>
-            <h3 className='mb-6 text-lg font-bold text-gray-900 sm:text-xl'>
-              Personal Information
-            </h3>
+        {/* O'ng ustun: Forma */}
+        <div className='w-full md:w-2/3 lg:w-3/4'>
+          <div className='rounded-xl border bg-card text-card-foreground shadow-sm'>
             <form
               id='profile-form'
               onSubmit={handleSubmit(onSubmit)}
-              className='space-y-6'
+              className='space-y-6 p-6 sm:p-8'
             >
               <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
-                <div>
-                  <label className='mb-1.5 block text-sm font-medium text-gray-700'>
+                <div className='space-y-2'>
+                  <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
                     Username
                   </label>
                   <Input
-                    {...register('username', { required: 'Username is required' })}
-                    placeholder='Enter your username'
-                    className='h-11'
+                    {...register('username', {
+                      required: 'Username is required',
+                    })}
+                    placeholder='e.g. john_doe'
+                    disabled={isFormDisabled}
                   />
                   {errors.username && (
-                    <p className='mt-1 text-xs text-red-500'>{errors.username.message}</p>
+                    <p className='text-[0.8rem] text-destructive'>
+                      {errors.username.message}
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <label className='mb-1.5 block text-sm font-medium text-gray-700'>
+                <div className='space-y-2'>
+                  <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
                     Timezone
                   </label>
-                  <Select
-                    value={profile?.timezone || 'Asia/Tashkent'}
-                    onValueChange={(value) => setValue('timezone', value, { shouldDirty: true })}
-                  >
-                    <SelectTrigger className='h-11 w-full'>
-                      <SelectValue placeholder='Select timezone' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIMEZONES.map((tz) => (
-                        <SelectItem key={tz} value={tz}>{tz}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+
+                  <Input
+                    {...register('timezone', {
+                      required: 'Timezone is required',
+                    })}
+                    placeholder='continent/city'
+                    disabled={isFormDisabled}
+                    defaultValue={profile?.timezone || 'Asia/Karshi'}
+                    onChange={(e) =>
+                      setValue('timezone', e.target.value, {
+                        shouldDirty: true,
+                      })
+                    }
+                  />
+
+                  {errors.timezone && (
+                    <p className='text-[0.8rem] text-destructive'>
+                      {errors.timezone.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <label className='mb-1.5 block text-sm font-medium text-gray-700'>Bio</label>
-                <textarea
+              <div className='space-y-2'>
+                <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                  Bio
+                </label>
+                <Textarea
                   {...register('bio')}
                   rows={4}
-                  placeholder='Tell us about yourself...'
-                  className={`${inputClassName} resize-none`}
+                  placeholder='Write a short introduction...'
+                  disabled={isFormDisabled}
+                  className='resize-none'
                 />
               </div>
 
-              <div>
-                <label className='mb-1.5 block text-sm font-medium text-gray-700'>
-                  Learning Goal
+              <div className='space-y-2'>
+                <label className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>
+                  Teaching / Learning Goal
                 </label>
-                <textarea
+                <Textarea
                   {...register('learning_goal')}
                   rows={3}
-                  placeholder='What are your teaching goals?'
-                  className={`${inputClassName} resize-none`}
+                  placeholder='What are your main goals?'
+                  disabled={isFormDisabled}
+                  className='resize-none'
                 />
               </div>
 
-              <div className='flex justify-end pt-4'>
+              <div className='flex justify-end border-t pt-4'>
                 <RoseButton
                   type='submit'
                   form='profile-form'
-                  disabled={
-                    (!isDirty && !selectedFile) ||
-                    updateProfileMutation.isPending ||
-                    isUploading
-                  }
-                  className='px-6 py-2.5'
+                  disabled={(!isDirty && !selectedFile) || isFormDisabled}
+                  className='w-full sm:w-auto'
                 >
-                  {updateProfileMutation.isPending || isUploading ? (
-                    <div className='flex items-center gap-2'>
-                      <Loader2 size={18} className='animate-spin' />
-                      {isUploading ? 'Uploading Image...' : 'Saving...'}
-                    </div>
+                  {isFormDisabled ? (
+                    <>
+                      <Loader2 size={16} className='mr-2 animate-spin' />
+                      {isUploading ? 'Uploading...' : 'Saving...'}
+                    </>
                   ) : (
                     <>
-                      <Save size={18} className='mr-2' />
+                      <Save size={16} className='mr-2' />
                       Save Changes
                     </>
                   )}

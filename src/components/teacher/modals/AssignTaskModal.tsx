@@ -1,9 +1,17 @@
-import { useState } from 'react'
-import { X, FileUp, Send } from 'lucide-react'
+import { useEffect } from 'react'
 import { format } from 'date-fns'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Controller, useForm } from 'react-hook-form'
+import { X, Send } from 'lucide-react'
+import { toast } from 'sonner'
+import { useTeacherGroups } from '@/hooks/teacher/groups/useTeacherGroups'
+import { useCreateAssignment, useUpdateAssignment } from '@/hooks/useAssignments'
 import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Select,
   SelectContent,
@@ -11,52 +19,127 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import type { Assignment } from '@/types/assignment.types'
 
 type AssignTaskModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  editingAssignment?: Assignment | null
 }
 
-const GROUPS = ['IELTS Intensive', 'General English B2', 'Kids Starter']
+type AssignTaskForm = {
+  title: string
+  group: number
+  deadline_date: string
+  deadline_time: string
+  description: string
+  max_score: number
+  submission_type: 'text' | 'file'
+}
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className='text-[11px] font-extrabold tracking-[0.14em] text-rose-700 uppercase'>
+    <p className='mb-1.5 text-[11px] font-extrabold tracking-[0.14em] text-rose-700 uppercase'>
       {children}
     </p>
   )
 }
 
-export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
-  const [title, setTitle] = useState('')
-  const [group, setGroup] = useState('IELTS Intensive')
-  const [deadline, setDeadline] = useState<Date | undefined>(undefined)
-  const [description, setDescription] = useState('')
-  const [files, setFiles] = useState<File[]>([])
-
-  const fileLabel =
-    files.length === 0
-      ? 'Fayllarni shu yerga tashlang'
-      : files.length === 1
-        ? files[0].name
-        : `${files.length} ta fayl tanlandi`
-
-  const handleFiles = (next: FileList | null) => {
-    if (!next) return
-    setFiles(Array.from(next))
-  }
+export function AssignTaskModal({
+  open,
+  onOpenChange,
+  editingAssignment,
+}: AssignTaskModalProps) {
+  const { data: groups, isLoading: groupsLoading } = useTeacherGroups()
+  const createMutation = useCreateAssignment()
+  const updateMutation = useUpdateAssignment()
+  const { register, handleSubmit, reset, control } = useForm<AssignTaskForm>({
+    defaultValues: {
+      title: '',
+      group: 0,
+      deadline_date: '',
+      deadline_time: '23:59',
+      description: '',
+      max_score: 100,
+      submission_type: 'text',
+    },
+  })
 
   const handleClose = () => {
     onOpenChange(false)
-    setTitle('')
-    setGroup('IELTS Intensive')
-    setDeadline(undefined)
-    setDescription('')
-    setFiles([])
+    reset()
   }
 
-  const handleSubmit = () => {
-    handleClose()
+  useEffect(() => {
+    if (!open) return
+    if (editingAssignment) {
+      const deadlineDate = new Date(editingAssignment.deadline)
+      reset({
+        title: editingAssignment.title,
+        group: editingAssignment.group,
+        deadline_date: Number.isNaN(deadlineDate.getTime())
+          ? ''
+          : format(deadlineDate, 'yyyy-MM-dd'),
+        deadline_time: Number.isNaN(deadlineDate.getTime())
+          ? '23:59'
+          : format(deadlineDate, 'HH:mm'),
+        description: editingAssignment.description,
+        max_score: editingAssignment.max_score,
+        submission_type: editingAssignment.submission_type,
+      })
+      return
+    }
+
+    reset({
+      title: '',
+      group: 0,
+      deadline_date: '',
+      deadline_time: '23:59',
+      description: '',
+      max_score: 100,
+      submission_type: 'text',
+    })
+  }, [open, editingAssignment, reset])
+
+  const onSubmit = async (values: AssignTaskForm) => {
+    try {
+      const deadlineDateTime = new Date(
+        `${values.deadline_date}T${values.deadline_time || '23:59'}`
+      )
+
+      if (Number.isNaN(deadlineDateTime.getTime())) {
+        toast.error("Muddatni to'g'ri kiriting")
+        return
+      }
+
+      const payload = {
+        title: values.title,
+        description: values.description,
+        group: Number(values.group),
+        deadline: deadlineDateTime.toISOString(),
+        max_score: Number(values.max_score),
+        submission_type: values.submission_type,
+        attachment: editingAssignment?.attachment ?? null,
+      }
+
+      if (editingAssignment) {
+        await updateMutation.mutateAsync({
+          id: editingAssignment.id,
+          payload,
+        })
+        toast.success('Vazifa yangilandi')
+      } else {
+        await createMutation.mutateAsync(payload)
+        toast.success("Vazifa muvaffaqiyatli qo'shildi")
+      }
+      handleClose()
+    } catch {
+      toast.error(
+        editingAssignment
+          ? 'Vazifani yangilashda xatolik yuz berdi'
+          : 'Vazifani yaratishda xatolik yuz berdi'
+      )
+    }
   }
 
   return (
@@ -65,10 +148,12 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
         <div className='flex items-start justify-between px-6 pt-5 md:px-8 md:pt-6'>
           <div>
             <h2 className='text-xl font-extrabold text-slate-900'>
-              Yangi vazifa qo'shish
+              {editingAssignment ? 'Vazifani tahrirlash' : "Yangi vazifa qo'shish"}
             </h2>
             <p className='mt-1 text-sm text-slate-500'>
-              O'quvchilar uchun yangi topshiriq yarating
+              {editingAssignment
+                ? "Avvalgi ma'lumotlar asosida topshiriqni yangilang"
+                : "O'quvchilar uchun yangi topshiriq yarating"}
             </p>
           </div>
           <button
@@ -80,93 +165,159 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
           </button>
         </div>
 
-        <div className='px-6 pt-3 pb-4 md:px-8 md:pt-4 md:pb-6'>
-          <div className='flex flex-col gap-4'>
-            <div className='flex flex-col gap-2'>
+        <form
+          id='assign-task-form'
+          onSubmit={handleSubmit(onSubmit)}
+          className='px-6 pt-5 pb-4 md:px-8 md:pt-6 md:pb-6'
+        >
+          <div className='flex flex-col gap-5'>
+            {/* VAZIFA NOMI */}
+            <div className='flex flex-col'>
               <FieldLabel>VAZIFA NOMI</FieldLabel>
               <input
                 type='text'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
                 placeholder='Masalan: Unit 5 Vocabulary Practice'
-                className='h-11 rounded-xl border-0 bg-slate-100 px-4 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-rose-600/20'
+                {...register('title', { required: true })}
+                className='h-11 w-full rounded-xl border-0 bg-slate-100 px-4 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-rose-600/20'
               />
             </div>
 
-            <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-              <div className='flex flex-col gap-2'>
+            {/* GURUH VA MUDDAT */}
+            <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
+              <div className='flex flex-col'>
                 <FieldLabel>GURUHNI TANLANG</FieldLabel>
-                <Select value={group} onValueChange={setGroup}>
-                  <SelectTrigger className='h-11 rounded-xl border-0 bg-slate-100 px-4 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-rose-600/20'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GROUPS.map((g) => (
-                      <SelectItem key={g} value={g}>
-                        {g}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  control={control}
+                  name='group'
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ? String(field.value) : ''}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                    >
+                      <SelectTrigger className='h-11 w-full rounded-xl border-0 bg-slate-100 px-4 py-5.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-rose-600/20'>
+                        <SelectValue
+                          placeholder={
+                            groupsLoading
+                              ? 'Guruhlar yuklanmoqda...'
+                              : 'Guruhni tanlang'
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(groups ?? []).map((group) => (
+                          <SelectItem key={group.id} value={String(group.id)}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
 
-              <div className='flex flex-col gap-2'>
+              <div className='flex flex-col'>
                 <FieldLabel>MUDDAT</FieldLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type='button'
-                      className='h-11 w-full rounded-xl border-0 bg-slate-100 px-4 text-left text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-rose-600/20'
-                    >
-                      {deadline ? format(deadline, 'dd.MM.yyyy') : (
-                        <span className='text-slate-400'>Sanani tanlang</span>
-                      )}
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className='w-auto p-0' align='start'>
-                    <Calendar
-                      mode='single'
-                      selected={deadline}
-                      onSelect={setDeadline}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <div className='flex w-full items-center gap-3'>
+                  <Controller
+                    control={control}
+                    name='deadline_date'
+                    rules={{ required: true }}
+                    render={({ field }) => {
+                      const selectedDate = field.value
+                        ? new Date(field.value)
+                        : undefined
+                      return (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type='button'
+                              className='h-11 flex-1 rounded-xl border-0 bg-slate-100 px-4 text-left text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-rose-600/20'
+                            >
+                              {selectedDate &&
+                              !Number.isNaN(selectedDate.getTime()) ? (
+                                format(selectedDate, 'dd.MM.yyyy')
+                              ) : (
+                                <span className='text-slate-400'>Calendar</span>
+                              )}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-auto p-0' align='start'>
+                            <Calendar
+                              mode='single'
+                              selected={selectedDate}
+                              onSelect={(date) => {
+                                if (!date) return
+                                field.onChange(format(date, 'yyyy-MM-dd'))
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      )
+                    }}
+                  />
+                  <input
+                    type='time'
+                    {...register('deadline_time', { required: true })}
+                    className='h-11 w-28 shrink-0 rounded-xl border-0 bg-slate-100 px-4 text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-rose-600/20 [&::-webkit-calendar-picker-indicator]:hidden'
+                  />
+                </div>
               </div>
             </div>
 
-            <div className='flex flex-col gap-2'>
+            {/* TAVSIF */}
+            <div className='flex flex-col'>
               <FieldLabel>TAVSIF</FieldLabel>
               <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
                 placeholder="Vazifa bo'yicha ko'rsatmalarni shu yerda yozing..."
                 rows={3}
-                className='min-h-[88px] resize-none rounded-xl border-0 bg-slate-100 px-4 py-3 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-rose-600/20'
+                {...register('description', { required: true })}
+                className='min-h-[88px] w-full resize-none rounded-xl border-0 bg-slate-100 px-4 py-3 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-rose-600/20'
               />
             </div>
 
-            <div className='flex flex-col gap-2'>
-              <FieldLabel>FAYL BIRIKTIRISH</FieldLabel>
-              <label className='mt-1 block cursor-pointer rounded-2xl border border-dashed border-rose-200 bg-white px-6 py-5 text-center hover:bg-rose-50/30'>
+            {/* BALL VA TURI */}
+            <div className='grid grid-cols-1 gap-5 md:grid-cols-2'>
+              <div className='flex flex-col'>
+                <FieldLabel>MAKSIMAL BALL</FieldLabel>
                 <input
-                  type='file'
-                  className='hidden'
-                  multiple
-                  onChange={(e) => handleFiles(e.target.files)}
+                  type='number'
+                  {...register('max_score', {
+                    required: true,
+                    valueAsNumber: true,
+                  })}
+                  className='h-11 w-full rounded-xl border-0 bg-slate-100 px-4 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-rose-600/20'
                 />
-                <div className='mx-auto mb-3 grid h-10 w-10 place-items-center rounded-2xl bg-rose-100 text-rose-700'>
-                  <FileUp size={16} />
-                </div>
-                <p className='text-sm font-bold text-slate-800'>{fileLabel}</p>
-                <p className='mt-1 text-xs text-slate-500'>
-                  yoki kompyuterdan tanlang (PDF, DOCX, JPG - Max 10MB)
-                </p>
-              </label>
+              </div>
+              <div className='flex flex-col'>
+                <FieldLabel>TOPSHIRISH TURI</FieldLabel>
+                <Controller
+                  control={control}
+                  name='submission_type'
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) =>
+                        field.onChange(value as 'text' | 'file')
+                      }
+                    >
+                      <SelectTrigger className='h-11 w-full rounded-xl border-0 bg-slate-100 px-4 py-5.5 text-sm font-medium text-slate-900 focus:ring-2 focus:ring-rose-600/20'>
+                        <SelectValue placeholder='Topshirish turini tanlang' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='text'>Matn</SelectItem>
+                        <SelectItem value='file'>Fayl</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </form>
 
+        {/* BUTTONLAR */}
         <div className='flex flex-col-reverse items-stretch justify-end gap-3 px-6 pb-5 sm:flex-row sm:items-center md:px-8 md:pb-6'>
           <button
             type='button'
@@ -177,11 +328,16 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
           </button>
           <button
             type='button'
-            onClick={handleSubmit}
+            onClick={handleSubmit(onSubmit)}
+            disabled={createMutation.isPending || updateMutation.isPending}
             className='primary-gradient inline-flex h-11 items-center gap-2 rounded-full px-7 text-sm font-bold text-white shadow-lg shadow-rose-900/15'
           >
             <Send size={16} />
-            Vazifani yuborish
+            {createMutation.isPending || updateMutation.isPending
+              ? 'Yuborilmoqda...'
+              : editingAssignment
+                ? 'Vazifani saqlash'
+                : 'Vazifani yuborish'}
           </button>
         </div>
       </DialogContent>

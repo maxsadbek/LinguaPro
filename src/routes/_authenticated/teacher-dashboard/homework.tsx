@@ -1,9 +1,30 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { BookOpen, Plus, Download } from 'lucide-react'
+import {
+  BookOpen,
+  Plus,
+  Download,
+  ChevronDown,
+  PencilLine,
+  Trash2,
+  Eye,
+  Check,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  useDeleteAssignment,
+  useGetAssignments,
+} from '@/hooks/useAssignments'
 import { RoseButton } from '@/components/ui/rose-button'
 import { AssignTaskModal } from '@/components/teacher/modals/AssignTaskModal'
 import { GroupDetailsModal } from '@/components/teacher/modals/GroupDetailsModal'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import type { Assignment } from '@/types/assignment.types'
 
 export const Route = createFileRoute(
   '/_authenticated/teacher-dashboard/homework'
@@ -13,8 +34,46 @@ export const Route = createFileRoute(
 
 function HomeworkPage() {
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
   const [groupDetailsOpen, setGroupDetailsOpen] = useState(false)
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all')
+  const { data: assignments, isLoading } = useGetAssignments()
+  const deleteMutation = useDeleteAssignment()
+
+  const formatDate = (value: string) => {
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return value
+    return date.toLocaleDateString('uz-UZ', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
+  const getStatus = (item: Assignment): 'active' | 'completed' => {
+    return new Date(item.deadline).getTime() >= Date.now() ? 'active' : 'completed'
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteMutation.mutateAsync(id)
+      toast.success("Topshiriq o'chirildi")
+    } catch {
+      toast.error("Topshiriqni o'chirishda xatolik yuz berdi")
+    }
+  }
+
+  const handleEdit = (item: Assignment) => {
+    setEditingAssignment(item)
+    setModalOpen(true)
+  }
+
+  const filteredAssignments = (assignments ?? []).filter((hw) => {
+    const status = getStatus(hw)
+    if (filter === 'active') return status === 'active'
+    if (filter === 'completed') return status === 'completed'
+    return true
+  })
 
   return (
     <div>
@@ -36,7 +95,16 @@ function HomeworkPage() {
         </RoseButton>
       </div>
 
-      <AssignTaskModal open={modalOpen} onOpenChange={setModalOpen} />
+      <AssignTaskModal
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open)
+          if (!open) {
+            setEditingAssignment(null)
+          }
+        }}
+        editingAssignment={editingAssignment}
+      />
       <GroupDetailsModal
         open={groupDetailsOpen}
         onOpenChange={setGroupDetailsOpen}
@@ -82,48 +150,20 @@ function HomeworkPage() {
 
       {/* Homework Cards */}
       <div className='grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-2'>
-        {[
-          {
-            title: 'Unit 5 Quiz',
-            group: 'IELTS 7.5 Morning',
-            due: '22-Aprel, 2026',
-            submitted: 22,
-            total: 25,
-            status: 'active',
-          },
-          {
-            title: 'Essay Writing',
-            group: 'General English B2',
-            due: '25-Aprel, 2026',
-            submitted: 15,
-            total: 22,
-            status: 'active',
-          },
-          {
-            title: 'Vocabulary Exercise',
-            group: 'Kids Starter',
-            due: '18-Aprel, 2026',
-            submitted: 18,
-            total: 18,
-            status: 'completed',
-          },
-          {
-            title: 'Grammar Practice',
-            group: 'IELTS Intensive',
-            due: '23-Aprel, 2026',
-            submitted: 8,
-            total: 20,
-            status: 'active',
-          },
-        ]
-          .filter((hw) => {
-            if (filter === 'active') return hw.status === 'active'
-            if (filter === 'completed') return hw.status === 'completed'
-            return true
-          })
-          .map((hw, index) => (
+        {isLoading ? (
+          <div className='rounded-2xl bg-white p-6 text-sm text-gray-500 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+            Topshiriqlar yuklanmoqda...
+          </div>
+        ) : filteredAssignments.length === 0 ? (
+          <div className='rounded-2xl bg-white p-6 text-sm text-gray-500 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'>
+            Hozircha topshiriqlar mavjud emas.
+          </div>
+        ) : (
+          filteredAssignments.map((hw) => {
+            const status = getStatus(hw)
+            return (
             <div
-              key={index}
+              key={hw.id}
               className='rounded-2xl bg-white p-6 shadow-[0_20px_40px_-10px_rgba(25,28,30,0.06)]'
             >
               <div className='mb-4 flex items-start justify-between'>
@@ -132,37 +172,100 @@ function HomeworkPage() {
                 </div>
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    hw.status === 'active'
+                    status === 'active'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-gray-100 text-gray-700'
                   }`}
                 >
-                  {hw.status === 'active' ? 'Faol' : 'Tugatilgan'}
+                  {status === 'active' ? 'Faol' : 'Tugatilgan'}
                 </span>
               </div>
               <h3 className='text-lg font-bold text-gray-800'>{hw.title}</h3>
-              <p className='text-sm text-gray-500'>{hw.group}</p>
-              <div className='mt-4 flex items-center justify-between text-sm text-gray-600'>
-                <span>Muddat: {hw.due}</span>
-                <span>
-                  {hw.submitted}/{hw.total} topshirildi
-                </span>
+              <p className='mt-1 text-sm text-gray-500'>Guruh ID: {hw.group}</p>
+              <div className='mt-4 grid grid-cols-2 gap-2 text-sm'>
+                <div className='rounded-xl bg-gray-50 px-3 py-2 text-gray-600'>
+                  <p className='text-[11px] font-semibold tracking-wide text-gray-400 uppercase'>
+                    Muddat
+                  </p>
+                  <p className='mt-1 font-medium text-gray-700'>
+                    {formatDate(hw.deadline)}
+                  </p>
+                </div>
+                <div className='rounded-xl bg-gray-50 px-3 py-2 text-gray-600'>
+                  <p className='text-[11px] font-semibold tracking-wide text-gray-400 uppercase'>
+                    Maks ball
+                  </p>
+                  <p className='mt-1 font-medium text-gray-700'>
+                  Maks ball: {hw.max_score}
+                  </p>
+                </div>
               </div>
               <div className='mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-200'>
                 <div
                   className='h-full bg-[#b80035]'
-                  style={{ width: `${(hw.submitted / hw.total) * 100}%` }}
+                  style={{
+                    width:
+                      status === 'active'
+                        ? `${Math.min(
+                            Math.max(
+                              ((new Date(hw.deadline).getTime() - Date.now()) /
+                                (7 * 24 * 60 * 60 * 1000)) *
+                                100,
+                              10
+                            ),
+                            100
+                          )}%`
+                        : '100%',
+                  }}
                 />
               </div>
-              <RoseButton
-                className='mt-4 w-full'
-                roseVariant='outline'
-                onClick={() => setGroupDetailsOpen(true)}
-              >
-                Batafsil
-              </RoseButton>
+              <div className='mt-5 flex flex-wrap items-center gap-2'>
+                <RoseButton
+                  roseVariant='outline'
+                  className='h-10 rounded-xl border-gray-300 px-3 text-gray-700 hover:bg-gray-50'
+                  onClick={() => handleEdit(hw)}
+                >
+                  <PencilLine size={16} />
+                  Tahrirlash
+                </RoseButton>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <RoseButton
+                      roseVariant='outline'
+                      className='h-10 rounded-xl border-red-200 px-3 text-red-600 hover:bg-red-50'
+                    >
+                      <Trash2 size={16} />
+                      O&apos;chirish
+                      <ChevronDown size={15} />
+                    </RoseButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='start' className='w-52 rounded-xl p-1'>
+                    <DropdownMenuItem
+                      variant='destructive'
+                      className='rounded-lg'
+                      onClick={() => handleDelete(hw.id)}
+                    >
+                      <Check size={16} />
+                      O&apos;chirishni tasdiqlash
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <RoseButton
+                  roseVariant='outline'
+                  className='h-10 rounded-xl border-gray-300 px-3 text-gray-700 hover:bg-gray-50'
+                  onClick={() =>
+                    hw.attachment
+                      ? window.open(hw.attachment, '_blank')
+                      : setGroupDetailsOpen(true)
+                  }
+                >
+                  <Eye size={16} />
+                  Batafsil
+                </RoseButton>
+              </div>
             </div>
-          ))}
+          )})
+        )}
       </div>
     </div>
   )

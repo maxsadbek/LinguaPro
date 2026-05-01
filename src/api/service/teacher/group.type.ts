@@ -6,6 +6,14 @@ export interface GroupStudent {
   joined_at: string
 }
 
+export interface StudentListItem {
+  id: number
+  username: string
+  phone?: string | null
+  avatar?: string | null
+  learning_goal?: string | null
+}
+
 export interface Group {
   id: number
   name: string
@@ -18,7 +26,7 @@ export interface Group {
 }
 
 export interface AddStudentPayload {
-  student_id: number
+  username: string
 }
 
 export interface MessageResponse {

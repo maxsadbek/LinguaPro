@@ -1,20 +1,17 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import {
-  Bell,
-  LogOut,
-  Search,
-  Settings,
-  User,
-  Menu,
-} from 'lucide-react'
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { useProfile } from '@/hooks/teacher/profile/useProfile'
+import { Bell, LogOut, Search, Settings, User, Menu } from 'lucide-react'
 import useUserStore from '@/stores/userStore'
+import { useProfile } from '@/hooks/teacher/profile/useProfile'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { useUnreadCount } from '@/features/notifications/hooks'
 
 function getInitials(name?: string) {
   if (!name) return 'U'
-  const parts = name.split(' ').map((p) => p.trim()).filter(Boolean)
+  const parts = name
+    .split(' ')
+    .map((p) => p.trim())
+    .filter(Boolean)
   const first = parts[0]?.[0] ?? 'U'
   const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : ''
   return `${first}${last}`.toUpperCase()
@@ -26,12 +23,18 @@ interface TeacherNavbarProps {
 
 export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
   const { data: profile } = useProfile()
+  const { data: unreadData } = useUnreadCount()
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement | null>(null)
-  const clearUserInfoAndToken = useUserStore((s) => s.actions.clearUserInfoAndToken)
+  const clearUserInfoAndToken = useUserStore(
+    (s) => s.actions.clearUserInfoAndToken
+  )
 
-  const initials = useMemo(() => getInitials(profile?.username), [profile?.username])
+  const initials = useMemo(
+    () => getInitials(profile?.username),
+    [profile?.username]
+  )
 
   const handleLogout = () => {
     clearUserInfoAndToken()
@@ -40,16 +43,22 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
 
   useEffect(() => {
     if (!open) return
+
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false)
     }
+
     const onPointerDown = (e: PointerEvent) => {
       const el = menuRef.current
       if (!el) return
-      if (e.target instanceof Node && !el.contains(e.target)) setOpen(false)
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setOpen(false)
+      }
     }
+
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('pointerdown', onPointerDown)
+
     return () => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('pointerdown', onPointerDown)
@@ -58,7 +67,7 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
 
   return (
     <header className='sticky top-0 z-50 flex w-full items-center justify-between border-b border-slate-100 bg-white/80 px-6 py-3 backdrop-blur-md'>
-      {/* Left: mobile menu + search */}
+      {/* Left */}
       <div className='flex items-center gap-3'>
         {onMenuClick ? (
           <button
@@ -84,7 +93,7 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
         </div>
       </div>
 
-      {/* Right: icons + divider + user */}
+      {/* Right */}
       <div className='flex items-center gap-1'>
         <Link
           to='/teacher-dashboard/notifications'
@@ -92,7 +101,9 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
           aria-label='Notifications'
         >
           <Bell size={20} />
-          <span className='absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500' />
+          {(unreadData?.unread_count ?? 0) > 0 && (
+            <span className='absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500' />
+          )}
         </Link>
 
         <Link
@@ -105,7 +116,7 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
 
         <div className='mx-3 h-6 w-px bg-slate-200' />
 
-        {/* User dropdown */}
+        {/* User */}
         <div ref={menuRef} className='relative'>
           <button
             type='button'
@@ -143,6 +154,7 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
                   Account
                 </p>
               </div>
+
               <Link
                 to='/teacher-dashboard/profile'
                 onClick={() => setOpen(false)}
@@ -152,6 +164,7 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
                 <User size={15} className='text-slate-400' />
                 Profile
               </Link>
+
               <button
                 type='button'
                 onClick={handleLogout}
