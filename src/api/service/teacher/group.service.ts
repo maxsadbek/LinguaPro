@@ -15,6 +15,12 @@ export const getStudentsList = (): Promise<StudentListItem[]> => {
   return apiClient.get<StudentListItem[]>(GROUP.STUDENTS_LIST)
 }
 
+export const getAvailableStudents = (
+  groupId: number
+): Promise<StudentListItem[]> => {
+  return apiClient.get<StudentListItem[]>(GROUP.AVAILABLE_STUDENTS(groupId))
+}
+
 export const addStudentToGroup = (
   groupId: number,
   data: AddStudentPayload

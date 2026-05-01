@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { getStudentsList } from '@/api/service/teacher/group.service'
+import { getAvailableStudents } from '@/api/service/teacher/group.service'
 
-export const useStudents = () => {
+export const useStudents = (groupId?: number) => {
   return useQuery({
-    queryKey: ['students'],
-    queryFn: () => getStudentsList(),
+    queryKey: ['students', 'available', groupId],
+    queryFn: () => getAvailableStudents(groupId as number),
+    enabled: Boolean(groupId),
   })
 }

@@ -49,7 +49,7 @@ function GroupsPage() {
     data: allStudents = [],
     isLoading: isLoadingStudents,
     isError: isErrorStudents,
-  } = useStudents()
+  } = useStudents(selectedGroup?.id)
 
   const addStudentMutation = useAddStudentToGroup(selectedGroup?.id ?? 0)
   const removeStudentMutation = useRemoveStudentFromGroup(
@@ -87,13 +87,6 @@ function GroupsPage() {
       setSelectedGroup(freshGroup)
     }
   }, [filteredGroups, selectedGroup])
-
-  const availableStudents = useMemo(() => {
-    const currentStudentIds = new Set(
-      selectedGroup?.students.map((s) => s.student) || []
-    )
-    return allStudents.filter((s) => !currentStudentIds.has(s.id))
-  }, [selectedGroup?.students, allStudents])
 
   // Handlers
   const handleAddStudent = (e: React.FormEvent) => {
@@ -287,12 +280,12 @@ function GroupsPage() {
                     <div className='p-4 text-center text-sm text-rose-500'>
                       Error loading students
                     </div>
-                  ) : availableStudents.length === 0 ? (
+                  ) : allStudents.length === 0 ? (
                     <div className='p-4 text-center text-sm text-slate-500'>
                       No available students
                     </div>
                   ) : (
-                    availableStudents.map((student) => (
+                    allStudents.map((student) => (
                       <SelectItem
                         key={student.id}
                         value={student.username}
