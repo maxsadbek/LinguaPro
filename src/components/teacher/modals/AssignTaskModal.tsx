@@ -1,9 +1,10 @@
+import { useEffect } from 'react'
 import { format } from 'date-fns'
 import { Controller, useForm } from 'react-hook-form'
 import { X, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { useTeacherGroups } from '@/hooks/teacher/groups/useTeacherGroups'
-import { useCreateAssignment } from '@/hooks/useAssignments'
+import { useCreateAssignment, useUpdateAssignment } from '@/hooks/useAssignments'
 import { Calendar } from '@/components/ui/calendar'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import {
@@ -18,10 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import type { Assignment } from '@/types/assignment.types'
 
 type AssignTaskModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  editingAssignment?: Assignment | null
 }
 
 type AssignTaskForm = {
@@ -42,9 +45,14 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
+export function AssignTaskModal({
+  open,
+  onOpenChange,
+  editingAssignment,
+}: AssignTaskModalProps) {
   const { data: groups, isLoading: groupsLoading } = useTeacherGroups()
   const createMutation = useCreateAssignment()
+  const updateMutation = useUpdateAssignment()
   const { register, handleSubmit, reset, control } = useForm<AssignTaskForm>({
     defaultValues: {
       title: '',
@@ -62,6 +70,37 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
     reset()
   }
 
+  useEffect(() => {
+    if (!open) return
+    if (editingAssignment) {
+      const deadlineDate = new Date(editingAssignment.deadline)
+      reset({
+        title: editingAssignment.title,
+        group: editingAssignment.group,
+        deadline_date: Number.isNaN(deadlineDate.getTime())
+          ? ''
+          : format(deadlineDate, 'yyyy-MM-dd'),
+        deadline_time: Number.isNaN(deadlineDate.getTime())
+          ? '23:59'
+          : format(deadlineDate, 'HH:mm'),
+        description: editingAssignment.description,
+        max_score: editingAssignment.max_score,
+        submission_type: editingAssignment.submission_type,
+      })
+      return
+    }
+
+    reset({
+      title: '',
+      group: 0,
+      deadline_date: '',
+      deadline_time: '23:59',
+      description: '',
+      max_score: 100,
+      submission_type: 'text',
+    })
+  }, [open, editingAssignment, reset])
+
   const onSubmit = async (values: AssignTaskForm) => {
     try {
       const deadlineDateTime = new Date(
@@ -73,20 +112,33 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
         return
       }
 
-      await createMutation.mutateAsync({
+      const payload = {
         title: values.title,
         description: values.description,
         group: Number(values.group),
         deadline: deadlineDateTime.toISOString(),
         max_score: Number(values.max_score),
         submission_type: values.submission_type,
-        attachment: null,
-      })
+        attachment: editingAssignment?.attachment ?? null,
+      }
 
-      toast.success("Vazifa muvaffaqiyatli qo'shildi")
+      if (editingAssignment) {
+        await updateMutation.mutateAsync({
+          id: editingAssignment.id,
+          payload,
+        })
+        toast.success('Vazifa yangilandi')
+      } else {
+        await createMutation.mutateAsync(payload)
+        toast.success("Vazifa muvaffaqiyatli qo'shildi")
+      }
       handleClose()
     } catch {
-      toast.error('Vazifani yaratishda xatolik yuz berdi')
+      toast.error(
+        editingAssignment
+          ? 'Vazifani yangilashda xatolik yuz berdi'
+          : 'Vazifani yaratishda xatolik yuz berdi'
+      )
     }
   }
 
@@ -96,10 +148,12 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
         <div className='flex items-start justify-between px-6 pt-5 md:px-8 md:pt-6'>
           <div>
             <h2 className='text-xl font-extrabold text-slate-900'>
-              Yangi vazifa qo'shish
+              {editingAssignment ? 'Vazifani tahrirlash' : "Yangi vazifa qo'shish"}
             </h2>
             <p className='mt-1 text-sm text-slate-500'>
-              O'quvchilar uchun yangi topshiriq yarating
+              {editingAssignment
+                ? "Avvalgi ma'lumotlar asosida topshiriqni yangilang"
+                : "O'quvchilar uchun yangi topshiriq yarating"}
             </p>
           </div>
           <button
@@ -275,11 +329,15 @@ export function AssignTaskModal({ open, onOpenChange }: AssignTaskModalProps) {
           <button
             type='button'
             onClick={handleSubmit(onSubmit)}
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || updateMutation.isPending}
             className='primary-gradient inline-flex h-11 items-center gap-2 rounded-full px-7 text-sm font-bold text-white shadow-lg shadow-rose-900/15'
           >
             <Send size={16} />
-            {createMutation.isPending ? 'Yuborilmoqda...' : 'Vazifani yuborish'}
+            {createMutation.isPending || updateMutation.isPending
+              ? 'Yuborilmoqda...'
+              : editingAssignment
+                ? 'Vazifani saqlash'
+                : 'Vazifani yuborish'}
           </button>
         </div>
       </DialogContent>

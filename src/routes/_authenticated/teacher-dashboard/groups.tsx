@@ -36,7 +36,7 @@ export const Route = createFileRoute(
 function GroupsPage() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedStudentId, setSelectedStudentId] = useState<string>('')
+  const [selectedStudentUsername, setSelectedStudentUsername] = useState('')
 
   // API Hooks
   const { data: profile } = useProfile()
@@ -79,7 +79,7 @@ function GroupsPage() {
     const freshGroup = filteredGroups.find((group) => group.id === selectedGroup.id)
     if (!freshGroup) {
       setSelectedGroup(null)
-      setSelectedStudentId('')
+      setSelectedStudentUsername('')
       return
     }
 
@@ -98,15 +98,15 @@ function GroupsPage() {
   // Handlers
   const handleAddStudent = (e: React.FormEvent) => {
     e.preventDefault()
-    const studentId = Number(selectedStudentId)
-    if (!studentId) return
+    const username = selectedStudentUsername.trim()
+    if (!username) return
 
-    toast.promise(addStudentMutation.mutateAsync({ student_id: studentId }), {
+    toast.promise(addStudentMutation.mutateAsync({ username }), {
       loading: 'Adding student...',
       success: (res) => res.detail || 'Student added successfully',
       error: 'Failed to add student',
     })
-    setSelectedStudentId('')
+    setSelectedStudentUsername('')
   }
 
   const handleRemoveStudent = (studentId: number) => {
@@ -170,55 +170,46 @@ function GroupsPage() {
             </p>
           </div>
         ) : (
-          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4'>
+          <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3'>
             {filteredGroups.map((group) => (
               <div
                 key={group.id}
-                className='group flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl'
+                className='group flex min-h-[270px] flex-col justify-between rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_20px_45px_-20px_rgba(15,23,42,0.28)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-20px_rgba(15,23,42,0.35)] sm:min-h-[300px] sm:p-6'
               >
                 <div>
-                  <div className='mb-5 flex items-start justify-between'>
-                    <div className='flex items-center gap-3'>
-                      <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-500 shadow-md shadow-rose-200'>
-                        <Users size={20} className='text-white' />
+                  <div className='mb-6 flex items-start justify-between'>
+                    <div className='flex items-center gap-3 sm:gap-4'>
+                      <div className='flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-pink-500 shadow-lg shadow-rose-200/70 sm:h-14 sm:w-14'>
+                        <Users size={22} className='text-white sm:h-6 sm:w-6' />
                       </div>
                       <div className='min-w-0'>
-                        <h3 className='truncate text-lg font-bold text-gray-900 transition-colors group-hover:text-rose-600'>
+                        <h3 className='truncate text-xl font-extrabold tracking-tight text-gray-900 transition-colors group-hover:text-rose-600 sm:text-[30px] sm:leading-8'>
                           {group.name}
                         </h3>
-                        <p className='text-xs text-gray-500 sm:text-sm'>
+                        <p className='mt-0.5 text-sm text-gray-500 sm:text-base'>
                           Course #{group.course}
                         </p>
                       </div>
                     </div>
-                    <button className='shrink-0 text-gray-400 transition-colors hover:text-gray-900'>
-                      <MoreVertical size={20} />
+                    <button className='shrink-0 rounded-lg p-1 text-gray-400 transition-colors hover:bg-slate-100 hover:text-gray-700'>
+                      <MoreVertical size={18} />
                     </button>
                   </div>
 
-                  {/* Fix: Overlapping text fixed using flex and w-1/3 evenly */}
-                  <div className='flex w-full items-center justify-between rounded-xl bg-slate-50 p-2 sm:p-3'>
-                    <div className='flex w-1/3 flex-col items-center justify-center text-center'>
-                      <p className='text-[9px] font-bold tracking-wider text-slate-400 uppercase sm:text-[10px]'>
+                  <div className='grid w-full grid-cols-2 divide-x divide-slate-200 rounded-2xl bg-slate-50 px-2 py-3 sm:px-3 sm:py-4'>
+                    <div className='flex flex-col items-center justify-center text-center'>
+                      <p className='text-[10px] font-extrabold tracking-[0.08em] text-slate-400 uppercase sm:text-xs'>
                         Status
                       </p>
-                      <p className='mt-0.5 w-full truncate text-xs font-semibold text-slate-700 capitalize sm:text-sm'>
+                      <p className='mt-1 w-full truncate px-1 text-base font-bold text-slate-800 capitalize sm:text-lg'>
                         {group.status}
                       </p>
                     </div>
-                    <div className='flex w-1/3 flex-col items-center justify-center border-x border-slate-200 px-1 text-center'>
-                      <p className='text-[9px] font-bold tracking-wider text-slate-400 uppercase sm:text-[10px]'>
-                        Teacher
-                      </p>
-                      <p className='mt-0.5 w-full truncate px-1 text-xs font-semibold text-slate-700 sm:text-sm'>
-                        {group.teacher_name || `#${group.teacher}`}
-                      </p>
-                    </div>
-                    <div className='flex w-1/3 flex-col items-center justify-center text-center'>
-                      <p className='text-[9px] font-bold tracking-wider text-slate-400 uppercase sm:text-[10px]'>
+                    <div className='flex flex-col items-center justify-center text-center'>
+                      <p className='text-[10px] font-extrabold tracking-[0.08em] text-slate-400 uppercase sm:text-xs'>
                         Students
                       </p>
-                      <p className='mt-0.5 text-xs font-semibold text-slate-700 sm:text-sm'>
+                      <p className='mt-1 text-base font-bold text-slate-800 sm:text-lg'>
                         {group.students.length}
                       </p>
                     </div>
@@ -226,7 +217,7 @@ function GroupsPage() {
                 </div>
 
                 <RoseButton
-                  className='mt-5 w-full rounded-xl py-2.5 text-sm font-semibold sm:text-base'
+                  className='mt-6 h-11 w-full rounded-2xl border-rose-500 text-base font-bold sm:h-12 sm:text-lg'
                   roseVariant='outline'
                   onClick={() => setSelectedGroup(group)}
                 >
@@ -249,7 +240,7 @@ function GroupsPage() {
           <button
             onClick={() => {
               setSelectedGroup(null)
-              setSelectedStudentId('')
+              setSelectedStudentUsername('')
             }}
             className='flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 sm:h-10 sm:w-10'
           >
@@ -281,8 +272,8 @@ function GroupsPage() {
               className='space-y-3 sm:space-y-4'
             >
               <Select
-                value={selectedStudentId}
-                onValueChange={setSelectedStudentId}
+                value={selectedStudentUsername}
+                onValueChange={setSelectedStudentUsername}
               >
                 <SelectTrigger className='h-11 w-full rounded-xl sm:h-12'>
                   <SelectValue placeholder='Select a student...' />
@@ -304,16 +295,18 @@ function GroupsPage() {
                     availableStudents.map((student) => (
                       <SelectItem
                         key={student.id}
-                        value={student.id.toString()}
+                        value={student.username}
                       >
                         <div className='flex items-center gap-2'>
                           <User size={16} className='text-slate-400' />
                           <span className='truncate font-medium'>
-                            {student.first_name} {student.last_name}
+                            {student.username}
                           </span>
-                          <span className='shrink-0 text-xs text-slate-400'>
-                            (#{student.id})
-                          </span>
+                          {student.phone ? (
+                            <span className='shrink-0 text-xs text-slate-400'>
+                              {student.phone}
+                            </span>
+                          ) : null}
                         </div>
                       </SelectItem>
                     ))
@@ -324,7 +317,7 @@ function GroupsPage() {
               <RoseButton
                 type='submit'
                 roseVariant='solid'
-                disabled={addStudentMutation.isPending || !selectedStudentId}
+                disabled={addStudentMutation.isPending || !selectedStudentUsername}
                 className='h-11 w-full rounded-xl text-sm font-semibold sm:h-12 sm:text-base'
               >
                 {addStudentMutation.isPending ? (

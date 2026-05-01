@@ -1,16 +1,29 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { BookOpen, Plus, Download } from 'lucide-react'
+import {
+  BookOpen,
+  Plus,
+  Download,
+  ChevronDown,
+  PencilLine,
+  Trash2,
+  Eye,
+  Check,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useDeleteAssignment,
   useGetAssignments,
-  useGradeAssignment,
-  useUpdateAssignment,
 } from '@/hooks/useAssignments'
 import { RoseButton } from '@/components/ui/rose-button'
 import { AssignTaskModal } from '@/components/teacher/modals/AssignTaskModal'
 import { GroupDetailsModal } from '@/components/teacher/modals/GroupDetailsModal'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { Assignment } from '@/types/assignment.types'
 
 export const Route = createFileRoute(
@@ -21,12 +34,11 @@ export const Route = createFileRoute(
 
 function HomeworkPage() {
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
   const [groupDetailsOpen, setGroupDetailsOpen] = useState(false)
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all')
   const { data: assignments, isLoading } = useGetAssignments()
   const deleteMutation = useDeleteAssignment()
-  const updateMutation = useUpdateAssignment()
-  const gradeMutation = useGradeAssignment()
 
   const formatDate = (value: string) => {
     const date = new Date(value)
@@ -43,7 +55,6 @@ function HomeworkPage() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Topshiriqni o'chirishni tasdiqlaysizmi?")) return
     try {
       await deleteMutation.mutateAsync(id)
       toast.success("Topshiriq o'chirildi")
@@ -52,42 +63,9 @@ function HomeworkPage() {
     }
   }
 
-  const handleQuickEdit = async (item: Assignment) => {
-    const title = window.prompt('Yangi vazifa nomi', item.title)
-    if (!title) return
-    try {
-      await updateMutation.mutateAsync({
-        id: item.id,
-        payload: {
-          title,
-          description: item.description,
-          group: item.group,
-          deadline: item.deadline,
-          max_score: item.max_score,
-          attachment: item.attachment,
-          submission_type: item.submission_type,
-        },
-      })
-      toast.success('Vazifa yangilandi')
-    } catch {
-      toast.error('Vazifani yangilashda xatolik yuz berdi')
-    }
-  }
-
-  const handleGrade = async (item: Assignment) => {
-    const raw = window.prompt(`Ball kiriting (0 - ${item.max_score})`, '0')
-    if (raw === null) return
-    const score = Number(raw)
-    if (Number.isNaN(score) || score < 0 || score > item.max_score) {
-      toast.error('Kiritilgan ball noto‘g‘ri')
-      return
-    }
-    try {
-      await gradeMutation.mutateAsync({ id: item.id, payload: { score } })
-      toast.success("Baholash muvaffaqiyatli bajarildi")
-    } catch {
-      toast.error("Baholashda xatolik yuz berdi")
-    }
+  const handleEdit = (item: Assignment) => {
+    setEditingAssignment(item)
+    setModalOpen(true)
   }
 
   const filteredAssignments = (assignments ?? []).filter((hw) => {
@@ -117,7 +95,16 @@ function HomeworkPage() {
         </RoseButton>
       </div>
 
-      <AssignTaskModal open={modalOpen} onOpenChange={setModalOpen} />
+      <AssignTaskModal
+        open={modalOpen}
+        onOpenChange={(open) => {
+          setModalOpen(open)
+          if (!open) {
+            setEditingAssignment(null)
+          }
+        }}
+        editingAssignment={editingAssignment}
+      />
       <GroupDetailsModal
         open={groupDetailsOpen}
         onOpenChange={setGroupDetailsOpen}
@@ -194,12 +181,24 @@ function HomeworkPage() {
                 </span>
               </div>
               <h3 className='text-lg font-bold text-gray-800'>{hw.title}</h3>
-              <p className='text-sm text-gray-500'>Guruh ID: {hw.group}</p>
-              <div className='mt-4 flex items-center justify-between text-sm text-gray-600'>
-                <span>Muddat: {formatDate(hw.deadline)}</span>
-                <span>
+              <p className='mt-1 text-sm text-gray-500'>Guruh ID: {hw.group}</p>
+              <div className='mt-4 grid grid-cols-2 gap-2 text-sm'>
+                <div className='rounded-xl bg-gray-50 px-3 py-2 text-gray-600'>
+                  <p className='text-[11px] font-semibold tracking-wide text-gray-400 uppercase'>
+                    Muddat
+                  </p>
+                  <p className='mt-1 font-medium text-gray-700'>
+                    {formatDate(hw.deadline)}
+                  </p>
+                </div>
+                <div className='rounded-xl bg-gray-50 px-3 py-2 text-gray-600'>
+                  <p className='text-[11px] font-semibold tracking-wide text-gray-400 uppercase'>
+                    Maks ball
+                  </p>
+                  <p className='mt-1 font-medium text-gray-700'>
                   Maks ball: {hw.max_score}
-                </span>
+                  </p>
+                </div>
               </div>
               <div className='mt-4 h-2 w-full overflow-hidden rounded-full bg-gray-200'>
                 <div
@@ -220,24 +219,47 @@ function HomeworkPage() {
                   }}
                 />
               </div>
-              <div className='mt-4 grid grid-cols-2 gap-2'>
-                <RoseButton roseVariant='outline' onClick={() => handleQuickEdit(hw)}>
-                  Tahrirlash
-                </RoseButton>
-                <RoseButton roseVariant='outline' onClick={() => handleGrade(hw)}>
-                  Baholash
-                </RoseButton>
-                <RoseButton roseVariant='outline' onClick={() => handleDelete(hw.id)}>
-                  O&apos;chirish
-                </RoseButton>
+              <div className='mt-5 flex flex-wrap items-center gap-2'>
                 <RoseButton
                   roseVariant='outline'
+                  className='h-10 rounded-xl border-gray-300 px-3 text-gray-700 hover:bg-gray-50'
+                  onClick={() => handleEdit(hw)}
+                >
+                  <PencilLine size={16} />
+                  Tahrirlash
+                </RoseButton>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <RoseButton
+                      roseVariant='outline'
+                      className='h-10 rounded-xl border-red-200 px-3 text-red-600 hover:bg-red-50'
+                    >
+                      <Trash2 size={16} />
+                      O&apos;chirish
+                      <ChevronDown size={15} />
+                    </RoseButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align='start' className='w-52 rounded-xl p-1'>
+                    <DropdownMenuItem
+                      variant='destructive'
+                      className='rounded-lg'
+                      onClick={() => handleDelete(hw.id)}
+                    >
+                      <Check size={16} />
+                      O&apos;chirishni tasdiqlash
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <RoseButton
+                  roseVariant='outline'
+                  className='h-10 rounded-xl border-gray-300 px-3 text-gray-700 hover:bg-gray-50'
                   onClick={() =>
                     hw.attachment
                       ? window.open(hw.attachment, '_blank')
                       : setGroupDetailsOpen(true)
                   }
                 >
+                  <Eye size={16} />
                   Batafsil
                 </RoseButton>
               </div>

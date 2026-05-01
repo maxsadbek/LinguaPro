@@ -15,6 +15,7 @@ const API_ENDPOINTS = {
   },
   GROUP: {
     MY: '/api/groups/my/',
+    STUDENTS_LIST: '/api/groups/students-list/',
     ADD_STUDENT: (groupId: number) => `/api/groups/${groupId}/add-student/`,
     REMOVE_STUDENT: (groupId: number, studentId: number) =>
       `/api/groups/${groupId}/remove-student/${studentId}/`,
