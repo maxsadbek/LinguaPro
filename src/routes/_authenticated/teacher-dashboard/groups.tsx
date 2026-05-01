@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   Users,
@@ -15,6 +15,7 @@ import type { Group } from '@/api/service/teacher/group.type'
 import { useAddStudentToGroup } from '@/hooks/teacher/groups/useAddStudentToGroup'
 import { useRemoveStudentFromGroup } from '@/hooks/teacher/groups/useRemoveStudentFromGroup'
 import { useTeacherGroups } from '@/hooks/teacher/groups/useTeacherGroups'
+import { useProfile } from '@/hooks/teacher/profile/useProfile'
 import { useStudents } from '@/hooks/teacher/students/useStudents'
 import { Input } from '@/components/ui/input'
 import { RoseButton } from '@/components/ui/rose-button'
@@ -25,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { GroupModal } from '@/components/GroupModal'
 
 export const Route = createFileRoute(
   '/_authenticated/teacher-dashboard/groups'
@@ -33,26 +33,13 @@ export const Route = createFileRoute(
   component: GroupsPage,
 })
 
-const INITIAL_GROUP_STATE = {
-  name: '',
-  course: 0,
-  teacher: 0,
-  start_time: '',
-  end_time: '',
-  week_days: '',
-  status: 'active' as const,
-  start_date: '',
-  end_date: '',
-}
-
 function GroupsPage() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedStudentId, setSelectedStudentId] = useState<string>('')
-  const [newGroup, setNewGroup] = useState(INITIAL_GROUP_STATE)
 
   // API Hooks
+  const { data: profile } = useProfile()
   const {
     data: groups = [],
     isLoading: isLoadingGroups,
@@ -69,11 +56,37 @@ function GroupsPage() {
     selectedGroup?.id ?? 0
   )
 
-  // Memoized Data
+  // Memoized Data - Filter groups by teacher ID
   const filteredGroups = useMemo(() => {
+    const teacherId = profile?.id
     const q = searchQuery.trim().toLowerCase()
-    return q ? groups.filter((g) => g.name.toLowerCase().includes(q)) : groups
-  }, [groups, searchQuery])
+
+    let result = groups
+    // Only show groups where teacher matches current user
+    if (teacherId) {
+      result = result.filter((g) => g.teacher === teacherId)
+    }
+    // Apply search filter
+    if (q) {
+      result = result.filter((g) => g.name.toLowerCase().includes(q))
+    }
+    return result
+  }, [groups, searchQuery, profile?.id])
+
+  useEffect(() => {
+    if (!selectedGroup) return
+
+    const freshGroup = filteredGroups.find((group) => group.id === selectedGroup.id)
+    if (!freshGroup) {
+      setSelectedGroup(null)
+      setSelectedStudentId('')
+      return
+    }
+
+    if (freshGroup !== selectedGroup) {
+      setSelectedGroup(freshGroup)
+    }
+  }, [filteredGroups, selectedGroup])
 
   const availableStudents = useMemo(() => {
     const currentStudentIds = new Set(
@@ -115,17 +128,9 @@ function GroupsPage() {
               Groups
             </h1>
             <p className='mt-1 text-sm text-gray-500 md:text-base'>
-              Manage your student groups and classes easily
+              Faqat sizga biriktirilgan guruhlar ko'rsatiladi
             </p>
           </div>
-          <RoseButton
-            onClick={() => setIsModalOpen(true)}
-            className='flex w-full items-center justify-center rounded-xl px-6 py-3 shadow-md transition-transform hover:scale-[1.02] sm:w-auto'
-            roseVariant='gradient'
-          >
-            <Plus size={18} className='mr-2' />
-            Create New Group
-          </RoseButton>
         </div>
 
         {/* Search */}
@@ -142,17 +147,6 @@ function GroupsPage() {
             className='h-12 w-full rounded-xl border-gray-200 bg-white pl-12 shadow-sm focus:border-rose-500 focus:ring-rose-500'
           />
         </div>
-
-        <GroupModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          newGroup={newGroup}
-          setNewGroup={setNewGroup}
-          onAddGroup={() => {
-            setIsModalOpen(false)
-            setNewGroup(INITIAL_GROUP_STATE)
-          }}
-        />
 
         {/* Groups Grid */}
         {isLoadingGroups ? (
@@ -172,7 +166,7 @@ function GroupsPage() {
               No groups found
             </h3>
             <p className='mt-1 text-sm text-gray-500'>
-              Create a new group to get started
+              Sizga tegishli guruh topilmadi
             </p>
           </div>
         ) : (
@@ -266,7 +260,7 @@ function GroupsPage() {
               {selectedGroup.name}
             </h1>
             <p className='text-xs text-gray-500 sm:text-sm'>
-              Course #{selectedGroup.course} • Roster Management
+              Course #{selectedGroup.course} - Roster Management
             </p>
           </div>
         </div>

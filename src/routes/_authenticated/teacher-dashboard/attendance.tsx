@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Calendar, Check, ChevronDown, Loader2, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import { apiClient } from '@/api/client'
 import type { AttendanceStatus } from '@/api/service/teacher/attendance.type'
 import { useAttendanceList } from '@/hooks/teacher/attendance/useAttendanceList'
 import { useGroupAttendance } from '@/hooks/teacher/attendance/useGroupAttendance'
+import { useTeacherGroups } from '@/hooks/teacher/groups/useTeacherGroups'
+import { useProfile } from '@/hooks/teacher/profile/useProfile'
 import { Calendar as CalendarPicker } from '@/components/ui/calendar'
 import {
   Popover,
@@ -29,18 +29,6 @@ type AttendanceStudent = {
   name: string
   status: AttendanceStatus
   note: string
-}
-
-type GroupStudent = { id: number; student: number; joined_at: string }
-
-type Group = {
-  id: number
-  name: string
-  course: number
-  teacher: number
-  status: string
-  start_date: string
-  students: GroupStudent[]
 }
 
 type SaveState = 'idle' | 'saving' | 'saved'
@@ -71,12 +59,6 @@ const STATUSES: AttendanceStatus[] = ['present', 'absent', 'late']
 
 // ─── Hook: GET /api/groups/my/ ────────────────────────────────────────────────
 
-const useMyGroups = () =>
-  useQuery<Group[]>({
-    queryKey: ['groups', 'my'],
-    queryFn: () => apiClient.get<Group[]>('/api/groups/my/'),
-  })
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 function AttendancePage() {
@@ -89,11 +71,31 @@ function AttendancePage() {
 
   const isoDate = useMemo(() => toISODate(date), [date])
 
-  const { data: groups = [], isLoading: groupsLoading } = useMyGroups()
+  const { data: profile } = useProfile()
+  const { data: groups = [], isLoading: groupsLoading } = useTeacherGroups()
   const { data: attendanceList = [] } = useAttendanceList()
 
-  const groupId = selectedGroupId || groups[0]?.id || 0
-  const groupData = groups.find((g) => g.id === groupId)
+  // Filter groups by teacher ID - only show groups where teacher matches current user
+  const filteredGroups = useMemo(() => {
+    const teacherId = profile?.id
+    if (!teacherId) return groups
+    return groups.filter((g) => g.teacher === teacherId)
+  }, [groups, profile?.id])
+
+  useEffect(() => {
+    if (!filteredGroups.length) {
+      setSelectedGroupId(0)
+      return
+    }
+
+    const selectedExists = filteredGroups.some((group) => group.id === selectedGroupId)
+    if (!selectedExists) {
+      setSelectedGroupId(filteredGroups[0].id)
+    }
+  }, [filteredGroups, selectedGroupId])
+
+  const groupId = selectedGroupId || filteredGroups[0]?.id || 0
+  const groupData = filteredGroups.find((g) => g.id === groupId)
 
   const groupAttendanceMutation = useGroupAttendance(groupId)
 
@@ -317,7 +319,7 @@ function AttendancePage() {
             </button>
             {groupOpen && (
               <div className='absolute top-full left-0 z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-xl'>
-                {groups.map((g) => (
+                {filteredGroups.map((g) => (
                   <button
                     key={g.id}
                     onClick={() => {
@@ -400,7 +402,11 @@ function AttendancePage() {
                     colSpan={4}
                     className='px-4 py-10 text-center text-slate-400'
                   >
-                    {groupsLoading ? 'Loading groups...' : 'No students found'}
+                    {groupsLoading
+                      ? 'Loading groups...'
+                      : filteredGroups.length === 0
+                        ? 'No groups assigned to you'
+                        : 'No students found'}
                   </td>
                 </tr>
               ) : (

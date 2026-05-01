@@ -1,21 +1,17 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import {
-  Bell,
-  ChevronDown,
-  LogOut,
-  Search,
-  Settings,
-  User,
-  Menu,
-} from 'lucide-react'
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { useProfile } from '@/hooks/teacher/profile/useProfile'
+import { Bell, LogOut, Search, Settings, User, Menu } from 'lucide-react'
 import useUserStore from '@/stores/userStore'
+import { useProfile } from '@/hooks/teacher/profile/useProfile'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { useUnreadCount } from '@/features/notifications/hooks'
 
 function getInitials(name?: string) {
   if (!name) return 'U'
-  const parts = name.split(' ').map((p) => p.trim()).filter(Boolean)
+  const parts = name
+    .split(' ')
+    .map((p) => p.trim())
+    .filter(Boolean)
   const first = parts[0]?.[0] ?? 'U'
   const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : ''
   return `${first}${last}`.toUpperCase()
@@ -27,12 +23,18 @@ interface TeacherNavbarProps {
 
 export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
   const { data: profile } = useProfile()
+  const { data: unreadData } = useUnreadCount()
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement | null>(null)
-  const clearUserInfoAndToken = useUserStore((s) => s.actions.clearUserInfoAndToken)
+  const clearUserInfoAndToken = useUserStore(
+    (s) => s.actions.clearUserInfoAndToken
+  )
 
-  const initials = useMemo(() => getInitials(profile?.username), [profile?.username])
+  const initials = useMemo(
+    () => getInitials(profile?.username),
+    [profile?.username]
+  )
 
   const handleLogout = () => {
     clearUserInfoAndToken()
@@ -93,7 +95,9 @@ export function TeacherNavbar({ onMenuClick }: TeacherNavbarProps) {
           aria-label='Notifications'
         >
           <Bell size={20} />
-          <span className='absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500' />
+          {(unreadData?.unread_count ?? 0) > 0 && (
+            <span className='absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-rose-500' />
+          )}
         </Link>
 
         <Link

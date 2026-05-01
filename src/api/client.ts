@@ -56,7 +56,7 @@ class ApiClient {
 					// 401 — token eskirgan yoki noto'g'ri
 					if (status === 401) {
 						useUserStore.getState().actions.clearUserInfoAndToken();
-						window.location.href = "/auth/login";
+						window.location.href = "/sign-in";
 					}
 
 					const msg = String(data?.message ?? "");

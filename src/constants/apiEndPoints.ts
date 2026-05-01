@@ -19,8 +19,14 @@ const API_ENDPOINTS = {
     REMOVE_STUDENT: (groupId: number, studentId: number) =>
       `/api/groups/${groupId}/remove-student/${studentId}/`,
   },
+  NOTIFICATIONS: {
+    MY: '/api/notifications/my/',
+    MARK_READ: (id: number) => `/api/notifications/${id}/read/`,
+    MARK_ALL_READ: '/api/notifications/read-all/',
+    UNREAD_COUNT: '/api/notifications/unread-count/',
+  },
   USER: {
     USER_ME: '/user',
   },
 }
-export const { AUTH, ATTENDANCE, GROUP, USER } = API_ENDPOINTS
+export const { AUTH, ATTENDANCE, GROUP, NOTIFICATIONS, USER } = API_ENDPOINTS
