@@ -17,7 +17,8 @@ export const Route = createFileRoute('/_authenticated/admin-dashboard')({
 
     if (!user.role) throw redirect({ to: '/sign-in' })
 
-    if (user.role !== 'admin') throw redirect({ to: '/teacher-dashboard' })
+    if (user.role === 'teacher') throw redirect({ to: '/teacher-dashboard' })
+    if (user.role !== 'admin') throw redirect({ to: '/student' })
   },
   component: AdminDashboardLayout,
 })

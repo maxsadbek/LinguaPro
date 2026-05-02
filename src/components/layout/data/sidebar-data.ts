@@ -2,6 +2,8 @@ import {
   AudioWaveform,
   Book,
   BookOpen,
+  CalendarDays,
+  ClipboardList,
   GalleryVerticalEnd,
   GraduationCap,
   LayoutDashboard,
@@ -15,7 +17,23 @@ import { CustomLogo } from '@/assets/custom-logo'
 import { type SidebarData } from '../types'
 
 export const adminProfileStorageKey = 'linguapro_admin_profile'
-export type SidebarRole = 'admin' | 'teacher'
+export type SidebarRole = 'admin' | 'teacher' | 'student'
+
+export const studentSidebarData = {
+  navGroups: [
+    {
+      title: 'Workspace',
+      items: [
+        { title: 'Overview', url: '/student', icon: LayoutDashboard },
+        { title: 'Schedule', url: '/student/schedule', icon: CalendarDays },
+        { title: 'Homework', url: '/student/homework', icon: ClipboardList },
+        { title: 'Messages', url: '/student/messages', icon: MessageSquare },
+        { title: 'Courses', url: '/student/courses', icon: BookOpen },
+        { title: 'Profile', url: '/student/profile', icon: User },
+      ],
+    },
+  ],
+}
 
 export const adminSidebarData: SidebarData = {
   user: {

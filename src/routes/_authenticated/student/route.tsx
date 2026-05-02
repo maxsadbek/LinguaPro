@@ -4,42 +4,44 @@ import { cn } from '@/lib/utils'
 import { LayoutProvider } from '@/context/layout-provider'
 import { SearchProvider } from '@/context/search-provider'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/layout/app-sidebar'
-import { TeacherNavbar } from '@/components/teacher/TeacherNavbar'
+import { StudentSidebar } from '@/components/student/layout/StudentSidebar'
+import { StudentNavbar } from '@/components/student/layout/StudentNavbar'
+import { StudentGuard } from '@/components/student/layout/StudentGuard'
 
-export const Route = createFileRoute('/_authenticated/teacher-dashboard')({
+export const Route = createFileRoute('/_authenticated/student')({
   beforeLoad: () => {
     if (typeof window === 'undefined') return
+
     const raw = sessionStorage.getItem('linguapro_user')
-    if (!raw) {
-      throw redirect({ to: '/sign-in' })
-    }
+    if (!raw) throw redirect({ to: '/sign-in' })
+
     try {
       const user = JSON.parse(raw) as { role?: string }
-      if (!user.role) {
+      if (!user.role) throw redirect({ to: '/sign-in' })
+      if (user.role !== 'user' && user.role !== 'student') {
+        if (user.role === 'teacher') {
+          throw redirect({ to: '/teacher-dashboard' })
+        }
+        if (user.role === 'admin') {
+          throw redirect({ to: '/admin-dashboard' })
+        }
         throw redirect({ to: '/sign-in' })
-      }
-      if (user.role === 'admin') {
-        throw redirect({ to: '/admin-dashboard' })
-      }
-      if (user.role !== 'teacher') {
-        throw redirect({ to: '/student' })
       }
     } catch {
       throw redirect({ to: '/sign-in' })
     }
   },
-  component: TeacherDashboardLayout,
+  component: StudentLayout,
 })
 
-function TeacherDashboardLayout() {
+function StudentLayout() {
   const defaultOpen = getCookie('sidebar_state') !== 'false'
 
   return (
     <SearchProvider>
       <LayoutProvider>
-        <SidebarProvider defaultOpen={defaultOpen}>
-          <AppSidebar />
+        <SidebarProvider defaultOpen={defaultOpen} className='student-portal'>
+          <StudentSidebar />
           <SidebarInset
             className={cn(
               '@container/content bg-slate-50',
@@ -47,10 +49,12 @@ function TeacherDashboardLayout() {
               'peer-data-[variant=inset]:has-data-[layout=fixed]:h-[calc(100svh-(var(--spacing)*4))]'
             )}
           >
-            <TeacherNavbar />
-            <main className='min-w-0 flex-1 px-4 py-4 md:px-8 md:py-6 md:pb-6'>
-              <Outlet />
-            </main>
+            <StudentNavbar />
+            <StudentGuard>
+              <main className='min-w-0 flex-1 px-4 py-4 md:px-8 md:py-6 md:pb-6'>
+                <Outlet />
+              </main>
+            </StudentGuard>
           </SidebarInset>
         </SidebarProvider>
       </LayoutProvider>
