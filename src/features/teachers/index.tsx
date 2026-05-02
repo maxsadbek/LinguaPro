@@ -481,7 +481,8 @@ export default function TeachersPage() {
     name: '',
     phone: '',
     attendance: 'present',
-    activity: 85,
+    password: '',
+    confirmPassword: '',
   })
 
   // Student search state
@@ -741,8 +742,45 @@ export default function TeachersPage() {
   }
 
   const handleAddStudent = () => {
-    if (!newStudent.name || !newStudent.phone) {
-      alert('Please enter student name and phone number')
+    const trimmedName = newStudent.name.trim()
+    const trimmedPhone = newStudent.phone.trim()
+    const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ'’\- ]{2,50}$/
+    const phoneRegex = /^[+]?([\d\s()-]){9,25}$/
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/
+
+    if (!trimmedName || !trimmedPhone) {
+      alert('Please enter the student name and phone number.')
+      return
+    }
+
+    if (!nameRegex.test(trimmedName)) {
+      alert('Name should be 2-50 letters and may include spaces, hyphens, or apostrophes.')
+      return
+    }
+
+    if (!phoneRegex.test(trimmedPhone)) {
+      alert('Phone number must contain only digits, spaces, +, parentheses, or hyphens.')
+      return
+    }
+
+    const digitsOnlyPhone = trimmedPhone.replace(/\D/g, '')
+    if (digitsOnlyPhone.length < 9 || digitsOnlyPhone.length > 15) {
+      alert('Phone number must include 9 to 15 digits.')
+      return
+    }
+
+    if (!newStudent.password || !newStudent.confirmPassword) {
+      alert('Please enter and confirm the password.')
+      return
+    }
+
+    if (!passwordRegex.test(newStudent.password)) {
+      alert('Password must be at least 8 characters and include uppercase, lowercase, and a digit.')
+      return
+    }
+
+    if (newStudent.password !== newStudent.confirmPassword) {
+      alert('Passwords do not match.')
       return
     }
 
@@ -751,10 +789,10 @@ export default function TeachersPage() {
     // Create new student
     const studentToAdd: Student = {
       id: Date.now(), // Unique ID based on timestamp
-      name: newStudent.name,
-      phone: newStudent.phone,
+      name: trimmedName,
+      phone: trimmedPhone,
       attendance: newStudent.attendance as 'present' | 'late' | 'absent',
-      activity: newStudent.activity,
+      activity: 85,
     }
 
     // Add to students state
@@ -780,7 +818,8 @@ export default function TeachersPage() {
       name: '',
       phone: '',
       attendance: 'present',
-      activity: 85,
+      password: '',
+      confirmPassword: '',
     })
     setAddStudentModalOpen(false)
     addToast(`"${newStudent.name}" student added successfully`, 'success')
@@ -1753,24 +1792,30 @@ export default function TeachersPage() {
           <div
             style={{
               background: 'white',
-              borderRadius: '12px',
-              padding: '24px',
-              width: '90%',
-              maxWidth: '500px',
+              borderRadius: '18px',
+              padding: '28px',
+              width: '92%',
+              maxWidth: '520px',
               maxHeight: '90vh',
               overflowY: 'auto',
+              boxShadow: '0 18px 40px rgba(15, 23, 42, 0.18)',
+              border: '1px solid rgba(229, 231, 235, 0.9)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <h2
               style={{
-                fontSize: '20px',
-                fontWeight: '600',
-                marginBottom: '16px',
+                fontSize: '22px',
+                fontWeight: '700',
+                marginBottom: '18px',
+                color: '#111827',
               }}
             >
               Add New Student
             </h2>
+            <p style={{ color: '#6b7280', marginBottom: '20px', fontSize: '14px' }}>
+              Enter student details and set a secure password before adding them to the group.
+            </p>
 
             <form
               onSubmit={(e) => {
@@ -1820,6 +1865,59 @@ export default function TeachersPage() {
                     }))
                   }
                   placeholder='e.g., +998 90 123 45 67'
+                  pattern='^[+]?([0-9\s()-]){9,25}$'
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Password *
+                </label>
+                <Input
+                  type='password'
+                  value={newStudent.password}
+                  onChange={(e) =>
+                    setNewStudent((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }))
+                  }
+                  placeholder='••••••••'
+                  pattern='^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$'
+                  title='At least 8 characters, including uppercase, lowercase, and a number.'
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: 'block',
+                    marginBottom: '4px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                  }}
+                >
+                  Confirm Password *
+                </label>
+                <Input
+                  type='password'
+                  value={newStudent.confirmPassword}
+                  onChange={(e) =>
+                    setNewStudent((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
+                  placeholder='••••••••'
                   required
                 />
               </div>
@@ -1857,33 +1955,7 @@ export default function TeachersPage() {
                 </select>
               </div>
 
-              <div>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '4px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                  }}
-                >
-                  Activity (%)
-                </label>
-                <Input
-                  type='number'
-                  min='0'
-                  max='100'
-                  value={newStudent.activity}
-                  onChange={(e) =>
-                    setNewStudent((prev) => ({
-                      ...prev,
-                      activity: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  placeholder='0-100'
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
                 <Button
                   type='button'
                   variant='outline'

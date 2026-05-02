@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { ArrowRight, ChevronRight, Laptop, Moon, Sun } from 'lucide-react'
 import { useSearch } from '@/context/search-provider'
 import { useTheme } from '@/context/theme-provider'
@@ -12,13 +12,17 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
-import { sidebarData } from './layout/data/sidebar-data'
+import { sidebarData, studentSidebarData } from './layout/data/sidebar-data'
 import { ScrollArea } from './ui/scroll-area'
 
 export function CommandMenu() {
   const navigate = useNavigate()
   const { setTheme } = useTheme()
   const { open, setOpen } = useSearch()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isStudentArea = pathname.startsWith('/student')
+
+  const items = isStudentArea ? studentSidebarData.navGroups : sidebarData.navGroups
 
   const runCommand = React.useCallback(
     (command: () => unknown) => {
@@ -34,15 +38,17 @@ export function CommandMenu() {
       <CommandList>
         <ScrollArea type='hover' className='h-72 pe-1'>
           <CommandEmpty>No results found.</CommandEmpty>
-          {sidebarData.navGroups.map((group) => (
+          {items.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((navItem, i) => {
+                // @ts-expect-error - navItem can be NavLink or NavCollapsible
                 if (navItem.url)
                   return (
                     <CommandItem
                       key={`${navItem.url}-${i}`}
                       value={navItem.title}
                       onSelect={() => {
+                        // @ts-expect-error - navItem is NavLink here
                         runCommand(() => navigate({ to: navItem.url }))
                       }}
                     >
@@ -53,6 +59,7 @@ export function CommandMenu() {
                     </CommandItem>
                   )
 
+                // @ts-expect-error - navItem is NavCollapsible
                 return navItem.items?.map((subItem, i) => (
                   <CommandItem
                     key={`${navItem.title}-${subItem.url}-${i}`}

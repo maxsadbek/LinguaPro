@@ -47,6 +47,14 @@
   --text-muted: var(--muted-foreground);
 }
 
+.student-portal {
+  --primary: oklch(0.577 0.245 27.325);
+  --primary-foreground: oklch(0.984 0.003 247.858);
+  --ring: oklch(0.577 0.245 27.325);
+  --accent: oklch(0.577 0.245 27.325 / 0.1);
+  --accent-foreground: oklch(0.577 0.245 27.325);
+}
+
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
@@ -84,6 +92,14 @@
   --text-primary: var(--card-foreground);
   --text-secondary: var(--muted-foreground);
   --text-muted: var(--muted-foreground);
+}
+
+.dark .student-portal {
+  --primary: oklch(0.704 0.191 22.216);
+  --primary-foreground: oklch(0.208 0.042 265.755);
+  --ring: oklch(0.704 0.191 22.216);
+  --accent: oklch(0.704 0.191 22.216 / 0.1);
+  --accent-foreground: oklch(0.704 0.191 22.216);
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');

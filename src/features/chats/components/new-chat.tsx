@@ -3,6 +3,8 @@ import { Check, X } from 'lucide-react'
 import { showSubmittedData } from '@/lib/show-submitted-data'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Command,
   CommandEmpty,
@@ -82,35 +84,47 @@ export function NewChat({ users, onOpenChange, open }: NewChatProps) {
             />
             <CommandList>
               <CommandEmpty>No people found.</CommandEmpty>
-              <CommandGroup>
+            <CommandGroup heading='People'>
+              <ScrollArea className='h-72'>
                 {users.map((user) => (
                   <CommandItem
                     key={user.id}
                     onSelect={() => handleSelectUser(user)}
-                    className='flex items-center justify-between gap-2 hover:bg-accent hover:text-accent-foreground'
+                    className='flex items-center justify-between gap-3 rounded-xl p-3 transition-all hover:bg-rose-50'
                   >
-                    <div className='flex items-center gap-2'>
-                      <img
-                        src={user.profile || '/placeholder.svg'}
-                        alt={user.fullName}
-                        className='h-8 w-8 rounded-full'
-                      />
-                      <div className='flex flex-col'>
-                        <span className='text-sm font-medium'>
+                    <div className='flex items-center gap-3'>
+                      <div className='relative'>
+                        <Avatar className='h-10 w-10 border border-slate-100 shadow-sm'>
+                          <AvatarImage src={user.profile || '/placeholder.svg'} alt={user.fullName} />
+                          <AvatarFallback className='bg-rose-100 text-rose-700 font-semibold'>
+                            {user.fullName.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        {user.status === 'online' && (
+                          <span className='absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 border-white bg-green-500' />
+                        )}
+                      </div>
+                      <div className='flex flex-col overflow-hidden'>
+                        <span className='truncate text-sm font-bold text-slate-900'>
                           {user.fullName}
                         </span>
-                        <span className='text-xs text-accent-foreground/70'>
-                          {user.username}
+                        <span className='truncate text-xs text-slate-500'>
+                          @{user.username}
                         </span>
                       </div>
                     </div>
 
-                    {selectedUsers.find((u) => u.id === user.id) && (
-                      <Check className='h-4 w-4' />
+                    {selectedUsers.find((u) => u.id === user.id) ? (
+                      <div className='flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-white'>
+                        <Check className='h-4 w-4 stroke-[3]' />
+                      </div>
+                    ) : (
+                      <div className='h-6 w-6 rounded-full border-2 border-slate-200 group-hover:border-rose-300' />
                     )}
                   </CommandItem>
                 ))}
-              </CommandGroup>
+              </ScrollArea>
+            </CommandGroup>
             </CommandList>
           </Command>
           <Button

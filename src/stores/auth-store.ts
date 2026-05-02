@@ -6,7 +6,7 @@ const ACCESS_TOKEN = 'thisisjustarandomstring'
 interface AuthUser {
   accountNo: string
   email: string
-  role: 'admin' | 'teacher' | 'user'
+  role: 'admin' | 'teacher' | 'student' | 'user'
   exp: number
 }
 

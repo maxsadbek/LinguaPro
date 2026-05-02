@@ -15,8 +15,9 @@ export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const defaultOpen = getCookie('sidebar_state') !== 'false'
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isTeacherArea = pathname.startsWith('/teacher-dashboard')
+  const isStudentArea = pathname.startsWith('/student')
 
-  if (isTeacherArea) {
+  if (isTeacherArea || isStudentArea) {
     return (
       <SearchProvider>
         <LayoutProvider>{children ?? <Outlet />}</LayoutProvider>

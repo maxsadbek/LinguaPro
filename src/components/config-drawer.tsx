@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/sheet'
 import { useSidebar } from './ui/sidebar'
 
-export function ConfigDrawer() {
+export function ConfigDrawer({ className }: { className?: string }) {
   const { setOpen } = useSidebar()
   const { resetDir } = useDirection()
   const { resetTheme } = useTheme()
@@ -47,9 +47,9 @@ export function ConfigDrawer() {
           size='icon'
           variant='ghost'
           aria-label='Open theme settings'
-          className='rounded-full'
+          className={cn('h-9 w-9 rounded-full text-foreground hover:bg-primary/10', className)}
         >
-          <Settings aria-hidden='true' />
+          <Settings size={18} aria-hidden='true' />
         </Button>
       </SheetTrigger>
       <SheetContent className='flex flex-col'>

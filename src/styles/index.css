@@ -11,10 +11,10 @@
     scrollbar-color: var(--border) transparent;
   }
   html {
-    @apply overflow-x-hidden;
+    @apply overflow-x-hidden scroll-smooth;
   }
   body {
-    @apply min-h-svh w-full bg-background text-foreground has-[div[data-variant='inset']]:bg-sidebar;
+    @apply min-h-svh w-full bg-background font-inter text-foreground antialiased has-[div[data-variant='inset']]:bg-sidebar;
   }
 
   /* Override Radix scroll locking for sticky headers */
