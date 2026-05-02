@@ -1,3 +1,4 @@
+import { useAdminUsers } from '@/hooks/admin/users/useAdminUsers'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -7,9 +8,23 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { UsersDialogs } from './components/users-dialogs'
 import { UsersProvider } from './components/users-provider'
 import { UsersTable } from './components/users-table'
-import { users } from './data/users'
 
 export function Users() {
+  const { data, isLoading, isError } = useAdminUsers()
+
+  const tableData = (data?.results ?? []).map((u) => ({
+    id: String(u.id),
+    firstName: u.first_name ?? '',
+    lastName: u.last_name ?? '',
+    username: u.username ?? '',
+    email: u.email ?? '',
+    phoneNumber: u.phone ?? '',
+    status: u.is_active ? ('active' as const) : ('inactive' as const),
+    role: u.role,
+    createdAt: new Date(u.created_at),
+    updatedAt: new Date(u.updated_at),
+  }))
+
   return (
     <UsersProvider>
       <Header fixed>
@@ -28,7 +43,13 @@ export function Users() {
             </p>
           </div>
         </div>
-        <UsersTable data={users} />
+        {isLoading ? (
+          <div className='text-sm text-muted-foreground'>Loading...</div>
+        ) : isError ? (
+          <div className='text-sm text-destructive'>Failed to load users.</div>
+        ) : (
+          <UsersTable data={tableData} />
+        )}
       </Main>
 
       <UsersDialogs />

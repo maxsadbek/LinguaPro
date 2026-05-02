@@ -65,3 +65,15 @@ export interface AssignmentListResponse {
   page: number
   totalPages: number
 }
+
+export interface ApiResponse<T> {
+  data: T
+  message?: string
+  status: 'success' | 'error'
+}
+
+export interface ApiError {
+  message: string
+  code: string
+  details?: unknown
+}

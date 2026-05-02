@@ -2,12 +2,9 @@ import {
   AudioWaveform,
   Book,
   BookOpen,
-<<<<<<< HEAD
-  ClipboardCheck,
-=======
   CalendarDays,
+  ClipboardCheck,
   ClipboardList,
->>>>>>> ca99db207a537d7b313f46eb718bd774c300e118
   GalleryVerticalEnd,
   GraduationCap,
   LayoutDashboard,
@@ -15,6 +12,7 @@ import {
   ScrollText,
   Settings,
   User,
+  Users,
 } from 'lucide-react'
 import { CustomLogo } from '@/assets/custom-logo'
 import { type SidebarData } from '../types'
@@ -71,14 +69,19 @@ export const adminSidebarData: SidebarData = {
           icon: LayoutDashboard,
         },
         {
-          title: 'Users',
-          url: '/users',
+          title: 'Students',
+          url: '/students',
           icon: User,
         },
         {
           title: 'Teachers',
           url: '/teachers',
           icon: GraduationCap,
+        },
+        {
+          title: 'Groups',
+          url: '/groups',
+          icon: Users,
         },
         {
           title: 'Courses',

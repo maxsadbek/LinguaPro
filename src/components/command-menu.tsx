@@ -41,14 +41,12 @@ export function CommandMenu() {
           {items.map((group) => (
             <CommandGroup key={group.title} heading={group.title}>
               {group.items.map((navItem, i) => {
-                // @ts-expect-error - navItem can be NavLink or NavCollapsible
                 if (navItem.url)
                   return (
                     <CommandItem
                       key={`${navItem.url}-${i}`}
                       value={navItem.title}
                       onSelect={() => {
-                        // @ts-expect-error - navItem is NavLink here
                         runCommand(() => navigate({ to: navItem.url }))
                       }}
                     >

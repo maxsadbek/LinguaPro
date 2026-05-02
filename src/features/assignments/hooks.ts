@@ -1,34 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiClient } from '@/api/client'
+import { getAssignments } from '@/api/service/assignment.service'
 import type {
   Assignment,
   AssignmentListParams,
   CreateAssignmentPayload,
   UpdateAssignmentPayload,
 } from '@/api/service/assignment.type'
-import { ASSIGNMENTS } from '@/constants/assignmentEndPoints'
 
 export const useAssignments = (params?: AssignmentListParams) => {
   return useQuery({
     queryKey: ['assignments', params],
-    queryFn: async () => {
-      try {
-        const result = await apiClient.get<Assignment[]>(ASSIGNMENTS, {
-          params,
-        })
-        // eslint-disable-next-line no-console
-        console.log('Assignments API Response:', result)
-        return result
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Assignments API Error:', error)
-        throw error
-      }
-    },
+    queryFn: () => getAssignments(params),
     staleTime: 30_000,
-    retry: (failureCount, error: { response?: { status: number } }) => {
+    retry: (failureCount, error) => {
       // Don't retry on 404 errors
-      if (error?.response?.status === 404) {
+      if (
+        error &&
+        'response' in error &&
+        (error.response as any)?.status === 404
+      ) {
+        // eslint-disable-next-line no-console
         console.error('404 Error detected, stopping retry')
         return false
       }

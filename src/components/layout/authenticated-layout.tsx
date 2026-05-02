@@ -14,8 +14,11 @@ type AuthenticatedLayoutProps = {
 export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const defaultOpen = getCookie('sidebar_state') !== 'false'
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const isTeacherArea = pathname.startsWith('/teacher-dashboard')
-  const isStudentArea = pathname.startsWith('/student')
+  const isTeacherArea =
+    pathname === '/teacher-dashboard' ||
+    pathname.startsWith('/teacher-dashboard/')
+  const isStudentArea =
+    pathname === '/student' || pathname.startsWith('/student/')
 
   if (isTeacherArea || isStudentArea) {
     return (
